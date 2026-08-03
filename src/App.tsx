@@ -143,12 +143,11 @@ function ContactButton({ className = '' }: { className?: string }) {
       href="mailto:hello@rebel-realm.com"
       className={`inline-flex items-center justify-center rounded-full text-white font-medium uppercase tracking-widest
         px-8 py-3 sm:px-10 sm:py-3.5 md:px-12 md:py-4 text-xs sm:text-sm md:text-base
-        hover:opacity-90 transition-opacity duration-200 cursor-pointer ${className}`}
+        transition-all duration-200 cursor-pointer hover:brightness-110 active:scale-[0.97] ${className}`}
       style={{
-        background: 'linear-gradient(123deg, #18011F 7%, #B600A8 37%, #7621B0 72%, #BE4C00 100%)',
-        boxShadow: '0px 4px 4px rgba(181, 1, 167, 0.25), 4px 4px 12px #7721B1 inset',
-        outline: '2px solid white',
-        outlineOffset: '-3px',
+        background: 'linear-gradient(135deg, #4E85BF 0%, #89AACC 100%)',
+        boxShadow: '0 4px 20px rgba(78, 133, 191, 0.35)',
+        border: '1px solid rgba(215, 226, 234, 0.3)',
       }}
     >
       Contact Us
@@ -159,11 +158,18 @@ function ContactButton({ className = '' }: { className?: string }) {
 /* ── Live Project Button ─────────────────────────── */
 function LiveProjectButton({ to, className = '' }: { to?: string; className?: string }) {
   const classes = `inline-flex items-center justify-center rounded-full border-2 border-[#D7E2EA] text-[#D7E2EA] font-medium uppercase tracking-widest
-    px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base hover:bg-[#D7E2EA]/10 transition-colors duration-200 cursor-pointer whitespace-nowrap ${className}`
+    px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base hover:bg-[#D7E2EA]/10 active:scale-[0.97] transition-all duration-200 cursor-pointer whitespace-nowrap ${className}`
   if (to) {
     return <Link to={to} className={classes}>Live Project</Link>
   }
-  return <a href="#" className={classes}>Live Project</a>
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-full border-2 border-[#D7E2EA]/25 text-[#D7E2EA]/40 font-medium uppercase tracking-widest
+        px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base cursor-default select-none whitespace-nowrap ${className}`}
+    >
+      Coming Soon
+    </span>
+  )
 }
 
 /* ══════════════════════════════════════════════════
@@ -177,7 +183,7 @@ const NAV_LINKS = [
 
 function HeroSection() {
   return (
-    <section className="h-screen flex flex-col relative" style={{ overflowX: 'clip' }}>
+    <section className="h-dvh flex flex-col relative" style={{ overflowX: 'clip' }}>
       {/* Navbar */}
       <FadeIn delay={0} y={-20}>
         <nav className="flex items-center justify-between px-8 sm:px-12 md:px-16 lg:px-20 pt-7 md:pt-9">
@@ -185,17 +191,14 @@ function HeroSection() {
             <a
               key={link.label}
               href={link.href}
-              className="text-[#D7E2EA] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 transition-opacity duration-200"
+              className="text-[#D7E2EA] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 transition-opacity duration-200"
             >
               {link.label}
             </a>
           ))}
-          <Link
-            to="/goal-rush"
-            className="text-[#D7E2EA] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 transition-opacity duration-200"
-          >
-            Goal Rush
-          </Link>
+          <span className="text-[#D7E2EA]/50 font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none">
+            Secret Project
+          </span>
         </nav>
       </FadeIn>
 
@@ -254,10 +257,10 @@ function HeroSection() {
       <div className="pb-16 sm:pb-20 md:pb-24 px-8 sm:px-12 md:px-16 lg:px-20">
         <FadeIn delay={0.35} y={20}>
           <p
-            className="text-[#D7E2EA] font-light uppercase tracking-wide leading-snug w-full text-center"
+            className="text-[#D7E2EA]/80 font-light tracking-wide leading-snug w-full text-center"
             style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
           >
-            we build games people are still arguing about years down the line
+            We build games people are still arguing about years down the line.
           </p>
         </FadeIn>
       </div>
@@ -266,119 +269,30 @@ function HeroSection() {
 }
 
 /* ══════════════════════════════════════════════════
-   MARQUEE SECTION
-   Featuring Goal Rush card art. Drop the four card
-   images into mainframe/public/cards/ with the exact
-   filenames below. Until a file is added, a placeholder
-   tile is shown in its place.
+   Fallback placeholder image used when a project image
+   fails to load.
 ══════════════════════════════════════════════════ */
-const MARQUEE_FALLBACK =
+const PLACEHOLDER_FALLBACK =
   'data:image/svg+xml;utf8,' + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="336">
       <rect width="240" height="336" fill="#141414"/>
-      <text x="50%" y="50%" fill="#4a4a4a" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">GOAL RUSH</text>
+      <text x="50%" y="50%" fill="#4a4a4a" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">REBEL REALM</text>
     </svg>`
   )
-
-const CARD_IMAGES = [
-  '/cards/card-01-el-midas.jpg',
-  '/cards/card-02-highland-fury.jpg',
-  '/cards/card-03-the-fortress.jpg',
-  '/cards/card-04-the-stallion.jpg',
-]
-
-const MARQUEE_IMAGES = Array.from({ length: 21 }, (_, i) => CARD_IMAGES[i % CARD_IMAGES.length])
-
-const ROW1 = MARQUEE_IMAGES.slice(0, 11)
-const ROW2 = MARQUEE_IMAGES.slice(11)
-
-function MarqueeRow({ images, direction }: { images: string[]; direction: 1 | -1 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [offset, setOffset] = useState(0)
-
-  useEffect(() => {
-    const onScroll = () => {
-      const el = ref.current
-      if (!el) return
-      const sectionTop = el.getBoundingClientRect().top + window.scrollY
-      const raw = (window.scrollY - sectionTop + window.innerHeight) * 0.3
-      setOffset(raw)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  const tripled = [...images, ...images, ...images]
-  const translate = direction === 1 ? offset - 200 : -(offset - 200)
-
-  return (
-    <div ref={ref} className="overflow-hidden">
-      <div
-        className="flex gap-3"
-        style={{ transform: `translateX(${translate}px)`, willChange: 'transform' }}
-      >
-        {tripled.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            loading="lazy"
-            className="rounded-2xl object-cover flex-shrink-0"
-            style={{ width: 240, height: 336 }}
-            alt=""
-            onError={(e) => {
-              if (e.currentTarget.src !== MARQUEE_FALLBACK) e.currentTarget.src = MARQUEE_FALLBACK
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MarqueeSection() {
-  return (
-    <section className="bg-[#0C0C0C] pt-24 sm:pt-32 md:pt-40 pb-10 flex flex-col gap-3">
-      <MarqueeRow images={ROW1} direction={1} />
-      <MarqueeRow images={ROW2} direction={-1} />
-    </section>
-  )
-}
 
 /* ══════════════════════════════════════════════════
    ABOUT SECTION
 ══════════════════════════════════════════════════ */
-const CORNER_IMAGES = [
-  {
-    src: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/moon_icon.11395d36.png',
-    cls: 'top-[4%] left-[1%] sm:left-[2%] md:left-[4%] w-[120px] sm:w-[160px] md:w-[210px]',
-    delay: 0.1, x: -80,
-  },
-  {
-    src: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/p59_1.4659672e.png',
-    cls: 'bottom-[8%] left-[3%] sm:left-[6%] md:left-[10%] w-[100px] sm:w-[140px] md:w-[180px]',
-    delay: 0.25, x: -80,
-  },
-  {
-    src: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/lego_icon-1.703bb594.png',
-    cls: 'top-[4%] right-[1%] sm:right-[2%] md:right-[4%] w-[120px] sm:w-[160px] md:w-[210px]',
-    delay: 0.15, x: 80,
-  },
-  {
-    src: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/Group_134-1.2e04f3ce.png',
-    cls: 'bottom-[8%] right-[3%] sm:right-[6%] md:right-[10%] w-[130px] sm:w-[170px] md:w-[220px]',
-    delay: 0.3, x: 80,
-  },
-]
-
 function AboutSection() {
   return (
-    <section id="about" className="min-h-screen flex items-center justify-center relative px-5 sm:px-8 md:px-10 py-20">
-      {CORNER_IMAGES.map((img, i) => (
-        <FadeIn key={i} delay={img.delay} x={img.x} y={0} duration={0.9} className={`absolute ${img.cls} hidden sm:block`}>
-          <img src={img.src} alt="" className="w-full h-auto select-none pointer-events-none" />
-        </FadeIn>
-      ))}
+    <section id="about" className="min-h-dvh flex items-center justify-center relative px-5 sm:px-8 md:px-10 py-20 overflow-hidden">
+      {/* Ambient glow, echoes the hero mark's accent hue */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 40%, rgba(78, 133, 191, 0.08) 0%, transparent 55%)',
+        }}
+      />
 
       <div className="flex flex-col items-center gap-10 sm:gap-14 md:gap-16 relative z-10">
         <FadeIn delay={0} y={40}>
@@ -392,7 +306,7 @@ function AboutSection() {
 
         <div className="flex flex-col items-center gap-16 sm:gap-20 md:gap-24">
           <AnimatedText
-            text="Rebel Realm is a company building games, software, and consulting on product, design, and production for apps and games -- built to last, not just to launch."
+            text="Rebel Realm is a studio building games, software and consulting on product and design. We're building games we're still proud of 10 years from now."
             className="text-[#D7E2EA] font-medium text-center max-w-3xl"
             style={{ fontSize: 'clamp(1.25rem, 2.6vw, 2.1rem)', lineHeight: 1.5 }}
           />
@@ -480,34 +394,33 @@ const PLACEHOLDER_IMG = (label: string, w: number, h: number) =>
 const PROJECTS: Project[] = [
   {
     num: '01',
-    category: 'Flagship',
-    name: 'Goal Rush',
+    category: 'Coming Soon',
+    name: 'Secret Project 1',
     col1: [
-      '/cards/card-01-el-midas.jpg',
-      '/cards/card-02-highland-fury.jpg',
+      PLACEHOLDER_IMG('Secret Project 1', 400, 230),
+      PLACEHOLDER_IMG('Secret Project 1', 400, 340),
     ],
-    col2: '/cards/card-03-the-fortress.jpg',
-    live: '/goal-rush',
+    col2: PLACEHOLDER_IMG('Secret Project 1', 700, 600),
   },
   {
     num: '02',
     category: 'Coming Soon',
-    name: 'Placeholder Project',
+    name: 'Secret Project 2',
     col1: [
-      PLACEHOLDER_IMG('Placeholder', 400, 230),
-      PLACEHOLDER_IMG('Placeholder', 400, 340),
+      PLACEHOLDER_IMG('Secret Project 2', 400, 230),
+      PLACEHOLDER_IMG('Secret Project 2', 400, 340),
     ],
-    col2: PLACEHOLDER_IMG('Placeholder', 700, 600),
+    col2: PLACEHOLDER_IMG('Secret Project 2', 700, 600),
   },
   {
     num: '03',
     category: 'Coming Soon',
-    name: 'Placeholder Project',
+    name: 'Secret Project 3',
     col1: [
-      PLACEHOLDER_IMG('Placeholder', 400, 230),
-      PLACEHOLDER_IMG('Placeholder', 400, 340),
+      PLACEHOLDER_IMG('Secret Project 3', 400, 230),
+      PLACEHOLDER_IMG('Secret Project 3', 400, 340),
     ],
-    col2: PLACEHOLDER_IMG('Placeholder', 700, 600),
+    col2: PLACEHOLDER_IMG('Secret Project 3', 700, 600),
   },
 ]
 
@@ -552,7 +465,7 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
               className="w-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
               style={{ height: 'clamp(130px, 16vw, 230px)' }}
               onError={(e) => {
-                if (e.currentTarget.src !== MARQUEE_FALLBACK) e.currentTarget.src = MARQUEE_FALLBACK
+                if (e.currentTarget.src !== PLACEHOLDER_FALLBACK) e.currentTarget.src = PLACEHOLDER_FALLBACK
               }}
             />
             <img
@@ -562,7 +475,7 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
               className="w-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px] flex-1"
               style={{ minHeight: 'clamp(160px, 22vw, 340px)' }}
               onError={(e) => {
-                if (e.currentTarget.src !== MARQUEE_FALLBACK) e.currentTarget.src = MARQUEE_FALLBACK
+                if (e.currentTarget.src !== PLACEHOLDER_FALLBACK) e.currentTarget.src = PLACEHOLDER_FALLBACK
               }}
             />
           </div>
@@ -573,7 +486,7 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
               loading="lazy"
               className="w-full h-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
               onError={(e) => {
-                if (e.currentTarget.src !== MARQUEE_FALLBACK) e.currentTarget.src = MARQUEE_FALLBACK
+                if (e.currentTarget.src !== PLACEHOLDER_FALLBACK) e.currentTarget.src = PLACEHOLDER_FALLBACK
               }}
             />
           </div>
@@ -607,48 +520,39 @@ function ProjectsSection() {
 }
 
 /* ══════════════════════════════════════════════════
-   HOME PAGE — full flowing single-page site
+   FOOTER
 ══════════════════════════════════════════════════ */
-function HomePage() {
+function SiteFooter() {
   return (
-    <div className="bg-[#0C0C0C]" style={{ overflowX: 'clip' }}>
-      <HeroSection />
-      <MarqueeSection />
-      <AboutSection />
-      <ServicesSection />
-      <ProjectsSection />
-    </div>
+    <footer className="bg-[#0C0C0C] px-6 sm:px-10 md:px-16 lg:px-20 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10">
+      <span className="text-[#D7E2EA]/50 text-sm tracking-wide">
+        © {new Date().getFullYear()} Rebel Realm
+      </span>
+      <a
+        href="mailto:hello@rebel-realm.com"
+        className="text-[#D7E2EA]/70 hover:text-[#D7E2EA] text-sm tracking-wide transition-colors duration-200"
+      >
+        hello@rebel-realm.com
+      </a>
+    </footer>
   )
 }
 
 /* ══════════════════════════════════════════════════
-   GOAL RUSH PAGE (unchanged, iframe route)
+   HOME PAGE — full flowing single-page site
 ══════════════════════════════════════════════════ */
-function GoalRushNav() {
+function HomePage() {
   return (
-    <nav className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-white/10">
-      <Link
-        to="/"
-        className="text-[#D7E2EA] font-medium uppercase tracking-widest text-sm hover:opacity-70 transition-opacity duration-200"
-      >
-        ← Rebel Realm
-      </Link>
-      <span className="text-[#D7E2EA] font-medium uppercase tracking-widest text-sm">Goal Rush</span>
-    </nav>
-  )
-}
-
-function GoalRushPage() {
-  return (
-    <div className="h-screen w-screen flex flex-col bg-[#080c0f]">
-      <GoalRushNav />
-      <iframe
-        src="/goal-rush.html"
-        className="flex-1 w-full border-0"
-        title="Goal Rush TCG"
-        allowFullScreen
-      />
-    </div>
+    <>
+      <a href="#main-content" className="skip-link">Skip to content</a>
+      <main id="main-content" className="bg-[#0C0C0C]" style={{ overflowX: 'clip' }}>
+        <HeroSection />
+        <AboutSection />
+        <ServicesSection />
+        <ProjectsSection />
+      </main>
+      <SiteFooter />
+    </>
   )
 }
 
@@ -661,7 +565,6 @@ function AppRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/goal-rush" element={<GoalRushPage />} />
       </Routes>
     </AnimatePresence>
   )
