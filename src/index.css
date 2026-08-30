@@ -10,6 +10,35 @@
   --z-content: 10;
   --z-nav: 50;
   --z-grain: 60;
+
+  /* ─── Theme tokens (dark, default) ─────────────── */
+  --bg: #0C0C0C;
+  --text: #D7E2EA;
+  --text-muted-op: 0.5;
+  --border-strong: #D7E2EA;
+  --border-soft: rgba(215, 226, 234, 0.15);
+  --heading-grad-1: #646973;
+  --heading-grad-2: #BBCCD7;
+  --mark-bg: #0C0C0C;
+  --mark-filter: none;
+  --grain-opacity: 0.035;
+  --placeholder-bg: #141414;
+  --placeholder-fg: #4a4a4a;
+}
+
+:root.light {
+  --bg: #f7f6f4;
+  --text: #14181c;
+  --text-muted-op: 0.55;
+  --border-strong: #14181c;
+  --border-soft: rgba(10, 15, 20, 0.14);
+  --heading-grad-1: #6b7480;
+  --heading-grad-2: #4E85BF;
+  --mark-bg: #eeecea;
+  --mark-filter: invert(1);
+  --grain-opacity: 0.02;
+  --placeholder-bg: #e7e5e2;
+  --placeholder-fg: #9a9793;
 }
 
 @layer base {
@@ -26,13 +55,22 @@
   html, body, #root {
     width: 100%;
     height: 100%;
-    background: #0C0C0C;
+    background: var(--bg);
   }
 
   body {
     font-family: 'Kanit', sans-serif;
-    color: #D7E2EA;
+    color: var(--text);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Smooth theme-switch crossfade on the properties that
+     actually change between themes. Deliberately excludes
+     transform/opacity so it never fights Framer Motion. */
+  body, body * {
+    transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+    transition-duration: 0.25s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   #root {
@@ -69,11 +107,75 @@
 }
 
 .hero-heading {
-  background: linear-gradient(180deg, #646973 0%, #BBCCD7 100%);
+  background: linear-gradient(180deg, var(--heading-grad-1) 0%, var(--heading-grad-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ─── Hero heading / mark — vh-aware so short-but-wide
+   viewports (e.g. 1366x768 laptops) don't overflow the
+   fixed-height hero section. Only the max-height media
+   query kicks in for constrained viewports; tall/normal
+   viewports keep the full vw-driven scale untouched. ── */
+.hero-heading-size {
+  font-size: clamp(3rem, 16vw, 17.5vw);
+}
+
+.hero-mark-size {
+  width: clamp(180px, 30vmin, 450px);
+}
+
+@media (max-height: 820px) {
+  .hero-heading-size {
+    font-size: clamp(2rem, 9vw, 6rem);
+  }
+
+  .hero-mark-size {
+    width: clamp(110px, 16vh, 260px);
+  }
+}
+
+/* ─── Theme toggle button ──────────────────────────
+   Adapted from the same animated sun/moon pattern used
+   on pmdispatch.com — rotating icon group, crossfading
+   sun/moon glyphs, click feedback. ── */
+.theme-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  opacity: 0.7;
+  border-radius: 8px;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+.theme-btn:hover { opacity: 1; }
+.theme-btn:active { transform: scale(0.85); }
+
+.theme-svg {
+  overflow: visible;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+:root:not(.light) .theme-svg { transform: rotate(270deg); }
+:root.light .theme-svg { transform: rotate(0deg); }
+
+.th-sun, .th-moon {
+  transform-origin: 12px 12px;
+  transition-property: opacity, transform;
+  transition-duration: 0.45s;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+:root.light .th-sun { opacity: 1; transform: scale(1) rotate(0deg); }
+:root:not(.light) .th-sun { opacity: 0; transform: scale(0.3) rotate(-45deg); }
+:root.light .th-moon { opacity: 0; transform: scale(0.4) rotate(90deg); }
+:root:not(.light) .th-moon { opacity: 1; transform: scale(1) rotate(0deg); }
 
 /* ─── Grain texture — breaks up flat dark surfaces ── */
 body::before {
@@ -82,7 +184,7 @@ body::before {
   inset: 0;
   z-index: var(--z-grain);
   pointer-events: none;
-  opacity: 0.035;
+  opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
@@ -98,7 +200,7 @@ body::before {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0C0C0C;
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
   background: #2a2a2a;

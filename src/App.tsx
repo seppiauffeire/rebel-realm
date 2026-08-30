@@ -1,8 +1,82 @@
-import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 'react'
+import {
+  useState, useEffect, useRef, createContext, useContext, type ReactNode, type CSSProperties,
+} from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import {
   motion, AnimatePresence, useScroll, useTransform,
 } from 'framer-motion'
+
+/* ══════════════════════════════════════════════════
+   THEME — light/dark toggle, same pattern as pmdispatch.com:
+   class on <html>, persisted to localStorage, applied
+   before first paint via a blocking script in index.html
+   so there's no flash of the wrong theme.
+══════════════════════════════════════════════════ */
+const ThemeContext = createContext<{ isLight: boolean; toggle: () => void }>({
+  isLight: false,
+  toggle: () => {},
+})
+
+function useTheme() {
+  return useContext(ThemeContext)
+}
+
+function ThemeProvider({ children }: { children: ReactNode }) {
+  const [isLight, setIsLight] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.classList.contains('light')
+  )
+
+  const toggle = () => {
+    setIsLight(prev => {
+      const next = !prev
+      document.documentElement.classList.toggle('light', next)
+      try {
+        localStorage.setItem('rr-theme', next ? 'light' : 'dark')
+      } catch {
+        // localStorage unavailable (private mode, etc.) — theme just won't persist
+      }
+      return next
+    })
+  }
+
+  return <ThemeContext.Provider value={{ isLight, toggle }}>{children}</ThemeContext.Provider>
+}
+
+/* ── Theme Toggle Button — animated sun/moon crossfade ── */
+function ThemeToggle() {
+  const { toggle } = useTheme()
+  return (
+    <button
+      className="theme-btn"
+      onClick={toggle}
+      aria-label="Toggle light/dark mode"
+      title="Toggle light/dark mode"
+    >
+      <svg className="theme-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <defs>
+          <mask id="moon-crescent-mask">
+            <rect x="0" y="0" width="24" height="24" fill="white" />
+            <circle cx="17" cy="8" r="9" fill="black" />
+          </mask>
+        </defs>
+        <g className="th-sun">
+          <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="5.64" y1="5.64" x2="4.22" y2="4.22" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          <line x1="5.64" y1="18.36" x2="4.22" y2="19.78" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+        </g>
+        <g className="th-moon">
+          <circle cx="12" cy="12" r="9" fill="currentColor" stroke="none" mask="url(#moon-crescent-mask)" />
+        </g>
+      </svg>
+    </button>
+  )
+}
 
 /* ══════════════════════════════════════════════════
    SHARED / REUSABLE COMPONENTS
@@ -157,14 +231,14 @@ function ContactButton({ className = '' }: { className?: string }) {
 
 /* ── Live Project Button ─────────────────────────── */
 function LiveProjectButton({ to, className = '' }: { to?: string; className?: string }) {
-  const classes = `inline-flex items-center justify-center rounded-full border-2 border-[#D7E2EA] text-[#D7E2EA] font-medium uppercase tracking-widest
-    px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base hover:bg-[#D7E2EA]/10 active:scale-[0.97] transition-all duration-200 cursor-pointer whitespace-nowrap ${className}`
+  const classes = `inline-flex items-center justify-center rounded-full border-2 border-[var(--border-strong)] text-[var(--text)] font-medium uppercase tracking-widest
+    px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base hover:bg-[var(--border-strong)]/10 active:scale-[0.97] transition-all duration-200 cursor-pointer whitespace-nowrap ${className}`
   if (to) {
     return <Link to={to} className={classes}>Live Project</Link>
   }
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full border-2 border-[#D7E2EA]/25 text-[#D7E2EA]/40 font-medium uppercase tracking-widest
+      className={`inline-flex items-center justify-center rounded-full border-2 border-[var(--border-strong)]/25 text-[var(--text)]/40 font-medium uppercase tracking-widest
         px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base cursor-default select-none whitespace-nowrap ${className}`}
     >
       Coming Soon
@@ -191,14 +265,15 @@ function HeroSection() {
             <a
               key={link.label}
               href={link.href}
-              className="text-[#D7E2EA] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 transition-opacity duration-200"
+              className="text-[var(--text)] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 transition-opacity duration-200"
             >
               {link.label}
             </a>
           ))}
-          <span className="text-[#D7E2EA]/50 font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none">
+          <span className="text-[var(--text)]/50 font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none">
             Secret Project
           </span>
+          <ThemeToggle />
         </nav>
       </FadeIn>
 
@@ -207,8 +282,7 @@ function HeroSection() {
         <div className="overflow-hidden">
           <FadeIn delay={0.15} y={40}>
             <h1
-              className="hero-heading font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center"
-              style={{ fontSize: 'clamp(3rem, 16vw, 17.5vw)' }}
+              className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center"
             >
               We Are
             </h1>
@@ -217,8 +291,7 @@ function HeroSection() {
         <div className="overflow-hidden">
           <FadeIn delay={0.25} y={40}>
             <h1
-              className="hero-heading font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center"
-              style={{ fontSize: 'clamp(3rem, 16vw, 17.5vw)' }}
+              className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center"
             >
               Rebel Realm
             </h1>
@@ -228,25 +301,27 @@ function HeroSection() {
 
       {/* Portrait / Mark — centered in remaining space */}
       <div className="flex-1 flex items-center justify-center relative min-h-0">
-        <div className="w-[27vmin] sm:w-[29vmin] md:w-[31vmin] lg:w-[32vmin] max-w-[450px] aspect-square">
+        <div className="hero-mark-size aspect-square">
           <Magnet padding={150} strength={3} className="w-full h-full">
             <div
               className="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
               style={{
-                background: '#0C0C0C',
-                border: '1px solid rgba(215, 226, 234, 0.15)',
-                boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.6)',
+                background: 'var(--mark-bg)',
+                border: '1px solid var(--border-soft)',
+                boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.25)',
               }}
             >
               {/* logo.png is a transparent/white-mark PNG — rendered over a solid
-                  black backdrop so the white mark reads clearly in the circle.
+                  backdrop so the mark reads clearly in the circle. In light mode
+                  the backdrop flips light and the mark is inverted (white -> black)
+                  via CSS filter, so no separate light-mode asset is needed.
                   Scaled up beyond 100% and clipped by the circle's overflow-hidden
                   mask, since object-contain alone reads too small at this aspect ratio. */}
               <img
                 src="/logo.png"
                 alt="Rebel Realm"
                 className="w-full h-full object-contain"
-                style={{ transform: 'scale(1.6)' }}
+                style={{ transform: 'scale(1.6)', filter: 'var(--mark-filter)' }}
               />
             </div>
           </Magnet>
@@ -257,7 +332,7 @@ function HeroSection() {
       <div className="pb-16 sm:pb-20 md:pb-24 px-8 sm:px-12 md:px-16 lg:px-20">
         <FadeIn delay={0.35} y={20}>
           <p
-            className="text-[#D7E2EA]/80 font-light tracking-wide leading-snug w-full text-center"
+            className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
             style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
           >
             We build games people are still arguing about years down the line.
@@ -270,15 +345,19 @@ function HeroSection() {
 
 /* ══════════════════════════════════════════════════
    Fallback placeholder image used when a project image
-   fails to load.
+   fails to load. Theme-aware so it matches whichever
+   mode is active.
 ══════════════════════════════════════════════════ */
-const PLACEHOLDER_FALLBACK =
-  'data:image/svg+xml;utf8,' + encodeURIComponent(
+const getPlaceholderFallback = (isLight: boolean) => {
+  const bg = isLight ? '#e7e5e2' : '#141414'
+  const fg = isLight ? '#9a9793' : '#4a4a4a'
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="336">
-      <rect width="240" height="336" fill="#141414"/>
-      <text x="50%" y="50%" fill="#4a4a4a" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">REBEL REALM</text>
+      <rect width="240" height="336" fill="${bg}"/>
+      <text x="50%" y="50%" fill="${fg}" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">REBEL REALM</text>
     </svg>`
   )
+}
 
 /* ══════════════════════════════════════════════════
    ABOUT SECTION
@@ -307,7 +386,7 @@ function AboutSection() {
         <div className="flex flex-col items-center gap-16 sm:gap-20 md:gap-24">
           <AnimatedText
             text="Rebel Realm is a studio building games, software and consulting on product and design. We're building games we're still proud of 10 years from now."
-            className="text-[#D7E2EA] font-medium text-center max-w-3xl"
+            className="text-[var(--text)] font-medium text-center max-w-3xl"
             style={{ fontSize: 'clamp(1.25rem, 2.6vw, 2.1rem)', lineHeight: 1.5 }}
           />
           <ContactButton />
@@ -383,45 +462,19 @@ type Project = {
   num: string
   category: string
   name: string
-  col1: [string, string]
-  col2: string
   live?: string
 }
 
-const PLACEHOLDER_IMG = (label: string, w: number, h: number) =>
-  `https://placehold.co/${w}x${h}/141414/4a4a4a?text=${encodeURIComponent(label)}&font=roboto`
+const PLACEHOLDER_IMG = (label: string, w: number, h: number, isLight: boolean) => {
+  const bg = isLight ? 'e7e5e2' : '141414'
+  const fg = isLight ? '9a9793' : '4a4a4a'
+  return `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(label)}&font=roboto`
+}
 
 const PROJECTS: Project[] = [
-  {
-    num: '01',
-    category: 'Coming Soon',
-    name: 'Secret Project 1',
-    col1: [
-      PLACEHOLDER_IMG('Secret Project 1', 400, 230),
-      PLACEHOLDER_IMG('Secret Project 1', 400, 340),
-    ],
-    col2: PLACEHOLDER_IMG('Secret Project 1', 700, 600),
-  },
-  {
-    num: '02',
-    category: 'Coming Soon',
-    name: 'Secret Project 2',
-    col1: [
-      PLACEHOLDER_IMG('Secret Project 2', 400, 230),
-      PLACEHOLDER_IMG('Secret Project 2', 400, 340),
-    ],
-    col2: PLACEHOLDER_IMG('Secret Project 2', 700, 600),
-  },
-  {
-    num: '03',
-    category: 'Coming Soon',
-    name: 'Secret Project 3',
-    col1: [
-      PLACEHOLDER_IMG('Secret Project 3', 400, 230),
-      PLACEHOLDER_IMG('Secret Project 3', 400, 340),
-    ],
-    col2: PLACEHOLDER_IMG('Secret Project 3', 700, 600),
-  },
+  { num: '01', category: 'Coming Soon', name: 'Secret Project 1' },
+  { num: '02', category: 'Coming Soon', name: 'Secret Project 2' },
+  { num: '03', category: 'Coming Soon', name: 'Secret Project 3' },
 ]
 
 function ProjectCard({ project, index, total }: { project: Project; index: number; total: number }) {
@@ -429,12 +482,20 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const targetScale = 1 - (total - 1 - index) * 0.03
   const scale = useTransform(scrollYProgress, [0, 1], [1, targetScale])
+  const { isLight } = useTheme()
+
+  const col1: [string, string] = [
+    PLACEHOLDER_IMG(project.name, 400, 230, isLight),
+    PLACEHOLDER_IMG(project.name, 400, 340, isLight),
+  ]
+  const col2 = PLACEHOLDER_IMG(project.name, 700, 600, isLight)
+  const fallback = getPlaceholderFallback(isLight)
 
   return (
-    <div ref={ref} className="h-[85vh] sticky top-24 md:top-32" style={{ top: `${index * 28}px` }}>
+    <div ref={ref} className="h-[85vh] max-h-[720px] sticky" style={{ top: `${96 + index * 28}px` }}>
       <motion.div
-        style={{ scale }}
-        className="rounded-[40px] sm:rounded-[50px] md:rounded-[60px] border-2 border-[#D7E2EA] bg-[#0C0C0C] p-4 sm:p-6 md:p-8 h-full flex flex-col"
+        style={{ scale, transformOrigin: 'top center' }}
+        className="rounded-[40px] sm:rounded-[50px] md:rounded-[60px] border-2 border-[var(--border-strong)] bg-[var(--bg)] p-4 sm:p-6 md:p-8 h-full flex flex-col"
       >
         {/* Top row */}
         <div className="flex items-center justify-between gap-4 flex-wrap mb-4 md:mb-6">
@@ -446,8 +507,8 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
               {project.num}
             </span>
             <div>
-              <p className="text-[#D7E2EA]/50 text-xs md:text-sm uppercase tracking-widest mb-1">{project.category}</p>
-              <h3 className="text-[#D7E2EA] font-medium uppercase" style={{ fontSize: 'clamp(1.1rem, 3vw, 2rem)' }}>
+              <p className="text-[var(--text)]/50 text-xs md:text-sm uppercase tracking-widest mb-1">{project.category}</p>
+              <h3 className="text-[var(--text)] font-medium uppercase" style={{ fontSize: 'clamp(1.1rem, 3vw, 2rem)' }}>
                 {project.name}
               </h3>
             </div>
@@ -459,34 +520,34 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
         <div className="flex gap-3 flex-1 min-h-0">
           <div className="flex flex-col gap-3" style={{ width: '40%' }}>
             <img
-              src={project.col1[0]}
+              src={col1[0]}
               alt=""
               loading="lazy"
               className="w-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
               style={{ height: 'clamp(130px, 16vw, 230px)' }}
               onError={(e) => {
-                if (e.currentTarget.src !== PLACEHOLDER_FALLBACK) e.currentTarget.src = PLACEHOLDER_FALLBACK
+                if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
               }}
             />
             <img
-              src={project.col1[1]}
+              src={col1[1]}
               alt=""
               loading="lazy"
               className="w-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px] flex-1"
               style={{ minHeight: 'clamp(160px, 22vw, 340px)' }}
               onError={(e) => {
-                if (e.currentTarget.src !== PLACEHOLDER_FALLBACK) e.currentTarget.src = PLACEHOLDER_FALLBACK
+                if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
               }}
             />
           </div>
           <div style={{ width: '60%' }}>
             <img
-              src={project.col2}
+              src={col2}
               alt=""
               loading="lazy"
               className="w-full h-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
               onError={(e) => {
-                if (e.currentTarget.src !== PLACEHOLDER_FALLBACK) e.currentTarget.src = PLACEHOLDER_FALLBACK
+                if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
               }}
             />
           </div>
@@ -500,7 +561,7 @@ function ProjectsSection() {
   return (
     <section
       id="projects"
-      className="bg-[#0C0C0C] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 md:-mt-14 relative z-10 px-6 sm:px-10 md:px-16 lg:px-20 pt-20 sm:pt-24 md:pt-32 pb-20"
+      className="bg-[var(--bg)] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 md:-mt-14 relative z-10 px-6 sm:px-10 md:px-16 lg:px-20 pt-20 sm:pt-24 md:pt-32 pb-20"
     >
       <FadeIn>
         <h2
@@ -524,13 +585,13 @@ function ProjectsSection() {
 ══════════════════════════════════════════════════ */
 function SiteFooter() {
   return (
-    <footer className="bg-[#0C0C0C] px-6 sm:px-10 md:px-16 lg:px-20 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10">
-      <span className="text-[#D7E2EA]/50 text-sm tracking-wide">
+    <footer className="bg-[var(--bg)] px-6 sm:px-10 md:px-16 lg:px-20 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[var(--border-soft)]">
+      <span className="text-[var(--text)]/50 text-sm tracking-wide">
         © {new Date().getFullYear()} Rebel Realm
       </span>
       <a
         href="mailto:hello@rebel-realm.com"
-        className="text-[#D7E2EA]/70 hover:text-[#D7E2EA] text-sm tracking-wide transition-colors duration-200"
+        className="text-[var(--text)]/70 hover:text-[var(--text)] text-sm tracking-wide transition-colors duration-200"
       >
         hello@rebel-realm.com
       </a>
@@ -545,7 +606,7 @@ function HomePage() {
   return (
     <>
       <a href="#main-content" className="skip-link">Skip to content</a>
-      <main id="main-content" className="bg-[#0C0C0C]" style={{ overflowX: 'clip' }}>
+      <main id="main-content" className="bg-[var(--bg)]" style={{ overflowX: 'clip' }}>
         <HeroSection />
         <AboutSection />
         <ServicesSection />
@@ -572,8 +633,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
