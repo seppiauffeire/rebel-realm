@@ -130,6 +130,7 @@ export function createCard(brand = 'Rebel Realm') {
     nameText.textContent = d.name || '';
     q('.rf-name').classList.toggle('named', !!d.name);
     paintArt(d);
+    fitBody();
     fitName();
 
     // cost gem
@@ -167,7 +168,21 @@ export function createCard(brand = 'Rebel Realm') {
     const have = box.clientWidth;
     if (have > 0 && need > have) box.style.setProperty('--ns', String(Math.max(0.58, have / need).toFixed(3)));
   }
-  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => fitName()).observe(el);
+  // Adaptive fit: if the rules overflow the card, step the text down, shrink the art window, then collapse rule wording.
+  // [text scale, art scale, dense]. The first state that fits wins; the last is the floor.
+  const FIT = [[1, 1, 0], [0.93, 1, 0], [0.86, 1, 0], [0.8, 0.85, 1], [0.75, 0.7, 1], [0.71, 0.6, 1], [0.66, 0.6, 1], [0.6, 0.6, 1], [0.54, 0.6, 1], [0.48, 0.6, 1]];
+  const bodyEl = q('.rf-body');
+  function fitBody() {
+    if (!el.clientWidth) return;
+    for (const [bs, as, dense] of FIT) {
+      el.style.setProperty('--bs', String(bs));
+      el.style.setProperty('--as', String(as));
+      if (dense) el.dataset.dense = '1'; else delete el.dataset.dense;
+      if (bodyEl.scrollHeight - bodyEl.clientHeight <= 1) break;
+    }
+    fitName();
+  }
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => fitBody()).observe(el);
 
   function stampEffect(id) {
     const row = rows.get(id);
