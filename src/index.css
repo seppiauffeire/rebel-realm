@@ -27,18 +27,19 @@
 }
 
 :root.light {
-  --bg: #f7f6f4;
-  --text: #14181c;
+  --bg: #efeeea;
+  --text: #131313;
   --text-muted-op: 0.55;
-  --border-strong: #14181c;
-  --border-soft: rgba(10, 15, 20, 0.14);
-  --heading-grad-1: #6b7480;
-  --heading-grad-2: #4E85BF;
-  --mark-bg: #eeecea;
+  --border-strong: #131313;
+  --border-soft: rgba(19, 19, 19, 0.18);
+  --heading-grad-1: #131313;
+  --heading-grad-2: #E5484D;
+  --accent: #E5484D;
+  --mark-bg: #e6e5e0;
   --mark-filter: invert(1);
   --grain-opacity: 0.02;
-  --placeholder-bg: #e7e5e2;
-  --placeholder-fg: #9a9793;
+  --placeholder-bg: #e2e1dc;
+  --placeholder-fg: #E5484D;
 }
 
 @layer base {

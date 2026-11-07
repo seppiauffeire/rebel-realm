@@ -326,8 +326,8 @@ function HeroSection() {
    mode is active.
 ══════════════════════════════════════════════════ */
 const getPlaceholderFallback = (isLight: boolean) => {
-  const bg = isLight ? '#e7e5e2' : '#141414'
-  const fg = isLight ? '#9a9793' : '#4a4a4a'
+  const bg = isLight ? '#e2e1dc' : '#141414'
+  const fg = isLight ? '#E5484D' : '#4a4a4a'
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="336">
       <rect width="240" height="336" fill="${bg}"/>
@@ -443,8 +443,8 @@ type Project = {
 }
 
 const PLACEHOLDER_IMG = (label: string, w: number, h: number, isLight: boolean) => {
-  const bg = isLight ? 'e7e5e2' : '141414'
-  const fg = isLight ? '9a9793' : '4a4a4a'
+  const bg = isLight ? 'e2e1dc' : '141414'
+  const fg = isLight ? 'E5484D' : '4a4a4a'
   return `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(label)}&font=roboto`
 }
 
@@ -472,7 +472,7 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
     <div ref={ref} className="h-[85vh] max-h-[720px] sticky" style={{ top: `${96 + index * 28}px` }}>
       <motion.div
         style={{ scale, transformOrigin: 'top center' }}
-        className="rounded-[40px] sm:rounded-[50px] md:rounded-[60px] border-2 border-[var(--border-strong)] bg-[var(--bg)] p-4 sm:p-6 md:p-8 h-full flex flex-col"
+        className="rounded-[40px] sm:rounded-[50px] md:rounded-[60px] border-2 border-[var(--border-strong)] bg-[var(--bg)] p-4 sm:p-6 md:p-8 h-full flex flex-col overflow-hidden"
       >
         {/* Top row */}
         <div className="flex items-center justify-between gap-4 flex-wrap mb-4 md:mb-6">
@@ -495,13 +495,13 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
 
         {/* Image grid */}
         <div className="flex gap-3 flex-1 min-h-0">
-          <div className="flex flex-col gap-3" style={{ width: '40%' }}>
+          <div className="flex flex-col gap-3 min-h-0" style={{ width: '40%' }}>
             <img
               src={col1[0]}
               alt=""
               loading="lazy"
-              className="w-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
-              style={{ height: 'clamp(130px, 16vw, 230px)' }}
+              className="w-full min-h-0 object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
+              style={{ flex: '42 1 0' }}
               onError={(e) => {
                 if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
               }}
@@ -510,14 +510,14 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
               src={col1[1]}
               alt=""
               loading="lazy"
-              className="w-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px] flex-1"
-              style={{ minHeight: 'clamp(160px, 22vw, 340px)' }}
+              className="w-full min-h-0 object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
+              style={{ flex: '58 1 0' }}
               onError={(e) => {
                 if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
               }}
             />
           </div>
-          <div style={{ width: '60%' }}>
+          <div className="min-h-0" style={{ width: '60%' }}>
             <img
               src={col2}
               alt=""
