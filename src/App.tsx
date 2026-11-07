@@ -5,6 +5,8 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import {
   motion, AnimatePresence, useScroll, useTransform,
 } from 'framer-motion'
+import RebelForge, { type ForgeStage } from './rebel-forge/react/RebelForge'
+import { decideMode } from './rebel-forge/host.js'
 
 /* ══════════════════════════════════════════════════
    THEME — light/dark toggle, same pattern as pmdispatch.com:
@@ -255,22 +257,50 @@ const NAV_LINKS = [
   { label: 'Projects', href: '#projects' },
 ]
 
+/* Sealed = visible but ghosted and inert until the Forge game reveals it. */
+const sealCls = (open: boolean) => `rr-seal${open ? '' : ' rr-sealed'}`
+
+type Reveal = { nav: boolean; headline: boolean; tagline: boolean }
+
 function HeroSection() {
+  // Decide synchronously so returning visitors / bots never see a flash of the game.
+  const [playing, setPlaying] = useState(() => {
+    if (typeof window === 'undefined') return false
+    let storage: Storage | null = null
+    try { storage = window.localStorage } catch { storage = null }
+    return decideMode({
+      search: window.location.search,
+      storage,
+      storageKey: 'rr_opened',
+      webdriver: navigator.webdriver === true,
+    }).mode === 'play'
+  })
+  const [rev, setRev] = useState<Reveal>({ nav: !playing, headline: !playing, tagline: !playing })
+  const openAll = () => setRev({ nav: true, headline: true, tagline: true })
+
+  const handleReveal = (stage: ForgeStage) => {
+    if (stage === 'kind') setRev(r => ({ ...r, nav: true }))
+    else if (stage === 'effects') setRev(r => ({ ...r, headline: true }))
+    else setRev(r => ({ ...r, tagline: true }))
+  }
+
+  const linkCls = (open: boolean) =>
+    `text-[var(--text)] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 ${sealCls(open)}`
+
   return (
-    <section className="h-dvh flex flex-col relative" style={{ overflowX: 'clip' }}>
-      {/* Navbar */}
+    <section
+      className={`${playing ? 'min-h-dvh' : 'h-dvh'} flex flex-col relative rf-skin`}
+      style={{ overflowX: 'clip' }}
+    >
+      {/* Navbar — the theme toggle is never sealed */}
       <FadeIn delay={0} y={-20}>
         <nav className="flex items-center justify-between px-8 sm:px-12 md:px-16 lg:px-20 pt-7 md:pt-9">
           {NAV_LINKS.map(link => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="text-[var(--text)] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 transition-opacity duration-200"
-            >
+            <a key={link.label} href={link.href} inert={!rev.nav} className={linkCls(rev.nav)}>
               {link.label}
             </a>
           ))}
-          <span className="text-[var(--text)]/50 font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none">
+          <span className={`text-[var(--text)]/50 font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none ${sealCls(rev.nav)}`}>
             Secret Project
           </span>
           <ThemeToggle />
@@ -278,58 +308,82 @@ function HeroSection() {
       </FadeIn>
 
       {/* Hero Heading */}
-      <div className="mt-6 sm:mt-4 md:mt-2">
-        <div className="overflow-hidden">
-          <FadeIn delay={0.15} y={40}>
-            <h1
-              className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center"
-            >
-              We Are
-            </h1>
-          </FadeIn>
+      {playing ? (
+        <div className={`mt-4 md:mt-5 px-6 ${sealCls(rev.headline)}`} inert={!rev.headline}>
+          <h1 className="hero-heading hero-heading-compact font-black uppercase tracking-tight leading-[0.95] text-center">
+            We Are Rebel Realm
+          </h1>
         </div>
-        <div className="overflow-hidden">
-          <FadeIn delay={0.25} y={40}>
-            <h1
-              className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center"
-            >
-              Rebel Realm
-            </h1>
-          </FadeIn>
+      ) : (
+        <div className="mt-6 sm:mt-4 md:mt-2">
+          <div className="overflow-hidden">
+            <FadeIn delay={0.15} y={40}>
+              <h1 className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center">
+                We Are
+              </h1>
+            </FadeIn>
+          </div>
+          <div className="overflow-hidden">
+            <FadeIn delay={0.25} y={40}>
+              <h1 className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center">
+                Rebel Realm
+              </h1>
+            </FadeIn>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Portrait / Mark — centered in remaining space */}
-      <div className="flex-1 flex items-center justify-center relative min-h-0">
-        <div className="hero-mark-size aspect-square">
-          <Magnet padding={150} strength={3} className="w-full h-full">
-            <div
-              className="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
-              style={{
-                background: 'var(--mark-bg)',
-                border: '1px solid var(--border-soft)',
-                boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.25)',
+      {/* Game, or the classic logo mark once it has collapsed */}
+      {playing ? (
+        <div className="flex-1 min-h-0 flex items-center justify-center px-4 sm:px-8 md:px-12 py-3 md:py-4">
+          <div className="w-full max-w-[1180px]">
+            <RebelForge
+              brand="Rebel Realm"
+              storageKey="rr_opened"
+              className="rf-host"
+              onReveal={handleReveal}
+              onRevealAll={openAll}
+              onCollapse={() => setPlaying(false)}
+              onEnter={() => {
+                window.setTimeout(() => {
+                  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+                }, 350)
               }}
-            >
-              {/* logo.png is a transparent/white-mark PNG — rendered over a solid
-                  backdrop so the mark reads clearly in the circle. In light mode
-                  the backdrop flips light and the mark is inverted (white -> black)
-                  via CSS filter, so no separate light-mode asset is needed.
-                  Scaled up beyond 100% and clipped by the circle's overflow-hidden
-                  mask, since object-contain alone reads too small at this aspect ratio. */}
-              <img
-                src="/logo.png"
-                alt="Rebel Realm"
-                className="w-full h-full object-contain"
-                style={{ transform: 'scale(1.6)', filter: 'var(--mark-filter)' }}
-              />
-            </div>
-          </Magnet>
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center relative min-h-0">
+          <div className="hero-mark-size aspect-square">
+            <Magnet padding={150} strength={3} className="w-full h-full">
+              <div
+                className="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
+                style={{
+                  background: 'var(--mark-bg)',
+                  border: '1px solid var(--border-soft)',
+                  boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.25)',
+                }}
+              >
+                {/* logo.png is a transparent/white-mark PNG over a solid backdrop; in light
+                    mode the backdrop flips and the mark inverts via CSS filter. Scaled past
+                    100% and clipped by the circle, since object-contain alone reads too small. */}
+                <img
+                  src="/logo.png"
+                  alt="Rebel Realm"
+                  className="w-full h-full object-contain"
+                  style={{ transform: 'scale(1.6)', filter: 'var(--mark-filter)' }}
+                />
+              </div>
+            </Magnet>
+          </div>
+        </div>
+      )}
 
       {/* Bottom bar */}
-      <div className="pb-16 sm:pb-20 md:pb-24 px-8 sm:px-12 md:px-16 lg:px-20">
+      <div
+        className={`${playing ? 'pb-6 md:pb-8' : 'pb-16 sm:pb-20 md:pb-24'} px-8 sm:px-12 md:px-16 lg:px-20 ${sealCls(rev.tagline)}`}
+        inert={!rev.tagline}
+      >
         <FadeIn delay={0.35} y={20}>
           <p
             className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
