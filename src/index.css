@@ -295,19 +295,14 @@ html.light .rf-skin .rf-game {
 .hero-welcome { display: block; font-size: min(12.4vw, 21vh); }
 .hero-realm { display: block; font-size: min(16vw, 28vh); }
 .hero-welcome > span, .hero-realm > span { display: inline; }
-/* once the game is collapsed the classic hero also holds the logo mark + tagline, so the title gives up some height */
-.hero-title:not(.is-play) .hero-welcome { font-size: min(12.4vw, 17vh); }
-.hero-title:not(.is-play) .hero-realm { font-size: min(16vw, 23vh); }
 /* phones: stack the words so the title stays huge instead of tiny on one line */
 @media (max-width: 640px), (max-width: 1000px) and (orientation: portrait) {
   .hero-title h1 { white-space: normal; }
   .hero-welcome { font-size: min(15vw, 12vh); }
   .hero-realm { font-size: min(25vw, 20vh); }
-  .hero-title:not(.is-play) .hero-welcome { font-size: min(15vw, 10vh); }
-  .hero-title:not(.is-play) .hero-realm { font-size: min(25vw, 16vh); }
   .hero-welcome > span, .hero-realm > span { display: block; }
 }
-.hero-screen-play { height: 100dvh; min-height: 520px; }
+.hero-screen { height: 100dvh; min-height: 520px; }
 .hero-cue {
   display: inline-flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 1rem 1rem 1.75rem;
   color: var(--text); opacity: 0.7; font-weight: 500; font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
@@ -320,3 +315,5 @@ html.light .rf-skin .rf-game {
 .forge-stage { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 2.5rem 1rem 3rem; }
 @media (min-width: 640px) { .forge-stage { padding-left: 2rem; padding-right: 2rem; } }
 @media (min-width: 768px) { .forge-stage { padding-left: 3rem; padding-right: 3rem; } }
+/* once the game is gone (returning visitor, skipped) the stage is just the tagline under the title */
+.forge-stage.is-idle { min-height: 0; padding-top: 0.5rem; padding-bottom: 4rem; }

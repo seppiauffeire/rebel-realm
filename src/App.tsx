@@ -1,5 +1,5 @@
 import {
-  useState, useEffect, useRef, createContext, useContext, type ReactNode, type CSSProperties,
+  useState, useRef, createContext, useContext, type ReactNode, type CSSProperties,
 } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import {
@@ -115,61 +115,6 @@ function FadeIn({
   )
 }
 
-/* ── Magnet: mouse-following magnetic hover ─────── */
-function Magnet({
-  children,
-  padding = 150,
-  strength = 3,
-  className = '',
-}: {
-  children: ReactNode
-  padding?: number
-  strength?: number
-  className?: string
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ x: 0, y: 0 })
-  const [active, setActive] = useState(false)
-
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      const el = ref.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
-      const dx = e.clientX - cx
-      const dy = e.clientY - cy
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      const maxDist = Math.max(rect.width, rect.height) / 2 + padding
-
-      if (dist < maxDist) {
-        setActive(true)
-        setPos({ x: dx / strength, y: dy / strength })
-      } else {
-        setActive(false)
-        setPos({ x: 0, y: 0 })
-      }
-    }
-    window.addEventListener('mousemove', handleMove, { passive: true })
-    return () => window.removeEventListener('mousemove', handleMove)
-  }, [padding, strength])
-
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
-        transition: active ? 'transform 0.3s ease-out' : 'transform 0.6s ease-in-out',
-        willChange: 'transform',
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 /* ── AnimatedText: char-by-char scroll reveal ───── */
 function AnimatedText({
   text, className = '', style,
@@ -262,6 +207,9 @@ const sealCls = (open: boolean) => `rr-seal${open ? '' : ' rr-sealed'}`
 
 type Reveal = { nav: boolean; tagline: boolean }
 
+const goTo = (id: string, delay = 0) =>
+  window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), delay)
+
 function HeroSection() {
   // Decide synchronously so returning visitors / bots never see a flash of the game.
   const [playing, setPlaying] = useState(() => {
@@ -278,7 +226,7 @@ function HeroSection() {
   const [rev, setRev] = useState<Reveal>({ nav: !playing, tagline: !playing })
   const openAll = () => setRev({ nav: true, tagline: true })
   const { scrollY } = useScroll()
-  // The title is the first thing seen at full size, then shrinks and dims as the visitor scrolls on to the game.
+  // The title is the first thing seen at full size, then shrinks and dims as the visitor scrolls on.
   const titleScale = useTransform(scrollY, [0, 520], [1, 0.5])
   const titleOpacity = useTransform(scrollY, [0, 520], [1, 0.25])
 
@@ -290,22 +238,10 @@ function HeroSection() {
   const linkCls = (open: boolean) =>
     `text-[var(--text)] font-medium uppercase tracking-wide sm:tracking-wider text-[0.7rem] sm:text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 ${sealCls(open)}`
 
-  const tagline = (
-    <p
-      className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
-      style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
-    >
-      We build games people are still arguing about years down the line.
-    </p>
-  )
-
   return (
     <>
       {/* Screen 1: the title, as big as it gets */}
-      <section
-        className={`${playing ? 'hero-screen-play' : 'h-dvh'} flex flex-col relative`}
-        style={{ overflowX: 'clip' }}
-      >
+      <section className="hero-screen flex flex-col relative" style={{ overflowX: 'clip' }}>
         <FadeIn delay={0} y={-20}>
           <nav className="flex items-center justify-between gap-2 px-5 sm:px-12 md:px-16 lg:px-20 pt-6 md:pt-9">
             {NAV_LINKS.map(link => (
@@ -323,9 +259,8 @@ function HeroSection() {
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <FadeIn delay={0.15} y={40} className="w-full">
             <motion.div
-              key={playing ? 'play' : 'classic'}
-              className={`hero-title ${playing ? 'is-play' : ''}`}
-              style={{ scale: playing ? titleScale : 1, opacity: playing ? titleOpacity : 1, transformOrigin: 'center top' }}
+              className="hero-title"
+              style={{ scale: titleScale, opacity: titleOpacity, transformOrigin: 'center top' }}
             >
               <h1 className="hero-heading text-center">
                 <span className="hero-welcome"><span>Welcome</span> <span>to the</span></span>
@@ -335,52 +270,20 @@ function HeroSection() {
           </FadeIn>
         </div>
 
-        {playing ? (
-          <a
-            href="#forge"
-            onClick={(e) => { e.preventDefault(); document.getElementById('forge')?.scrollIntoView({ behavior: 'smooth' }) }}
-            className="hero-cue self-center"
-            aria-label="Scroll down to play"
-          >
-            <span>Forge a card to enter</span>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
-          </a>
-        ) : (
-          <>
-            <div className="flex-1 flex items-center justify-center relative min-h-0">
-              <div className="hero-mark-size aspect-square">
-                <Magnet padding={150} strength={3} className="w-full h-full">
-                  <div
-                    className="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
-                    style={{
-                      background: 'var(--mark-bg)',
-                      border: '1px solid var(--border-soft)',
-                      boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.25)',
-                    }}
-                  >
-                    {/* logo.png is a transparent/white-mark PNG over a solid backdrop; in light
-                        mode the backdrop flips and the mark inverts via CSS filter. Scaled past
-                        100% and clipped by the circle, since object-contain alone reads too small. */}
-                    <img
-                      src="/logo.png"
-                      alt="Rebel Realm"
-                      className="w-full h-full object-contain"
-                      style={{ transform: 'scale(1.6)', filter: 'var(--mark-filter)' }}
-                    />
-                  </div>
-                </Magnet>
-              </div>
-            </div>
-            <div className="pb-12 sm:pb-16 md:pb-20 px-8 sm:px-12 md:px-16 lg:px-20">
-              <FadeIn delay={0.35} y={20}>{tagline}</FadeIn>
-            </div>
-          </>
-        )}
+        <a
+          href="#forge"
+          onClick={(e) => { e.preventDefault(); goTo('forge') }}
+          className="hero-cue self-center"
+          aria-label="Scroll down"
+        >
+          <span>{playing ? 'Forge a card to enter' : 'Scroll'}</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+        </a>
       </section>
 
-      {/* Screen 2: the game, popping in as it arrives so the visitor can focus on it */}
-      {playing && (
-        <section id="forge" className="rf-skin forge-stage" style={{ overflowX: 'clip' }}>
+      {/* Screen 2: the game (while it is playing), with the tagline always underneath */}
+      <section id="forge" className={`rf-skin forge-stage${playing ? '' : ' is-idle'}`} style={{ overflowX: 'clip' }}>
+        {playing && (
           <motion.div
             className="w-full max-w-[1180px] mx-auto"
             initial={{ opacity: 0, y: 60, scale: 0.94, filter: 'blur(10px)' }}
@@ -394,17 +297,25 @@ function HeroSection() {
               className="rf-host"
               onReveal={handleReveal}
               onRevealAll={openAll}
-              onCollapse={() => setPlaying(false)}
-              onEnter={() => {
-                window.setTimeout(() => {
-                  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
-                }, 350)
+              onCollapse={(reason) => {
+                setPlaying(false)
+                // Skip and "Enter the site" both mean: take me into the page.
+                if (reason === 'skip' || reason === 'enter') goTo('about', 350)
               }}
             />
           </motion.div>
-          <div className={`mt-6 md:mt-8 px-4 ${sealCls(rev.tagline)}`} inert={!rev.tagline}>{tagline}</div>
-        </section>
-      )}
+        )}
+        <div className={`${playing ? 'mt-6 md:mt-8' : ''} px-4 ${sealCls(rev.tagline)}`} inert={!rev.tagline}>
+          <FadeIn y={20}>
+            <p
+              className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
+              style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
+            >
+              We build games people are still arguing about years down the line.
+            </p>
+          </FadeIn>
+        </div>
+      </section>
     </>
   )
 }
