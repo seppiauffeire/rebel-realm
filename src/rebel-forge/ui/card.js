@@ -133,7 +133,7 @@ export function createCard(brand = 'Rebel Realm') {
     fitName();
 
     // cost gem
-    const cost = rating && rating.cost !== null && rating.parts ? rating.cost : null;
+    const cost = Number.isInteger(d.cost) ? d.cost : null;
     const gem = q('.rf-gem');
     q('.rf-cost').textContent = cost === null ? (rating && rating.power && rating.power.net > 27.5 ? '!' : '?') : cost;
     gem.classList.toggle('over', cost === null && !!rating && rating.power.net > 27.5);

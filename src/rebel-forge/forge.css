@@ -321,3 +321,15 @@ body.light .rf-sweet{background:rgba(0,0,0,.12)}
   .rf-card[data-type="instant"] .rf-in{padding-right:12%}
   .rf-card[data-type="attack"] .rf-in{padding-bottom:7.5%}
 }
+
+/* ---- cost step: pick the cost you think is fair ---- */
+.rf-costs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.45rem}
+.rf-ctile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;padding:.7rem .2rem .6rem;border:1px solid var(--rf-edge);background:var(--rf-card-bg);color:var(--rf-ink);cursor:pointer;text-align:center;transition:transform .12s,border-color .12s,background .12s}
+.rf-ctile b{font:800 1.9rem/1 var(--rf-display)}
+.rf-ctile small{font:600 .68rem var(--rf-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--rf-dim)}
+.rf-ctile:hover{transform:translateY(-2px);border-color:var(--rf-c)}
+.rf-ctile.on{background:var(--rf-c);border-color:var(--rf-c);color:var(--rf-on)}
+.rf-ctile.on small{color:inherit;opacity:.85}
+.rf-skin .rf-ctile{border-radius:16px}
+.rf-sweet{display:none}
+@media (max-width:520px){.rf-costs{grid-template-columns:repeat(3,minmax(0,1fr))}}

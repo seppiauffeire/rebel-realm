@@ -1,4 +1,4 @@
-import { EFFECTS, TRIGGERS, TYPES, INSTANT_FIT, RATING, GRADES, CLASSICS, PAIRS_RAW, EPS, ceiling } from './balance.js';
+import { EFFECTS, TRIGGERS, TYPES, INSTANT_FIT, RATING, GRADES, CLASSICS, PAIRS_RAW, EPS, MAXES, KEYWORDS } from './balance.js';
 import { computeNet, costFor, efficiencyFor, effectPP, effectiveRate } from './power.js';
 import { validate } from './validate.js';
 import { wordCount } from './text.js';
@@ -47,6 +47,7 @@ function pairDetail(design) {
   const ctx = [...ids];
   if (design.type === 'permanent' && design.permanent && design.permanent.trigger) ctx.push(design.permanent.trigger);
   if (design.price) ctx.push(design.price.id);
+  (design.keywords || []).forEach((k) => ctx.push(k));
   let sum = 0;
   let trigEffectPositive = false;
   const hits = [];
@@ -77,20 +78,59 @@ export function loopRisk(design, cost) {
   return hasCards && cost !== null && gained >= cost;
 }
 
+// How far the player's chosen cost is from the fair one. Under-pricing is punished harder than over-pricing:
+// a strong card that is cheap and has no downside is the thing this game is about catching.
+const UNDER = [25, 9, 0];
+const OVER = [25, 18, 11, 5, 0];
+export function budgetScore(chosen, fair) {
+  const diff = chosen - fair;
+  return diff >= 0 ? OVER[Math.min(diff, OVER.length - 1)] : UNDER[Math.min(-diff, UNDER.length - 1)];
+}
+
+function budgetReason(chosen, fair, eff) {
+  const diff = chosen - fair;
+  if (diff === 0) return `Cost ${fair} is exactly right for this power.`;
+  if (diff < 0) return `You paid ${chosen}, but this card is worth ${fair}. Too cheap for what it does.`;
+  return `You paid ${chosen}, but this card is only worth ${fair}. You overpaid.`;
+}
+
+// Depth: does the card ask the player to make real decisions? (Not the same as Focus, which is about simplicity,
+// or Synergy, which is about parts fitting together.)
+const SCALING = ['perEnemyCard', 'perCardPlayed', 'blockPerCard'];
+const PLANNING = ['keepCards', 'peek', 'recycle', 'tutor', 'copyLast', 'extraDrawNext', 'extraEnergyNext'];
+function depthDetail(design) {
+  let pts = 3;
+  const why = [];
+  const add = (n, text) => { pts += n; why.push(text); };
+  const ids = design.effects.map((e) => e.id);
+  const kws = design.keywords || [];
+  if (ids.some((i) => SCALING.includes(i))) add(4, 'it scales with the board');
+  if (ids.some((i) => EFFECTS[i].future || PLANNING.includes(i)) && design.type !== 'permanent') add(3, 'it is a plan for later');
+  if (design.type === 'instant') add(3, 'you choose when to play it');
+  if (design.type === 'permanent' && design.permanent && design.permanent.trigger && TRIGGERS[design.permanent.trigger].conditional) add(4, 'it reacts to the game');
+  if (kws.includes('chainBonus') || kws.includes('opener')) add(3, 'its timing matters');
+  if (kws.includes('keepInHand')) add(2, 'you decide when to cash it in');
+  if (kws.includes('singleUse')) add(2, 'you only get to use it once');
+  if (design.price) add(2, 'you decide if the price is worth it');
+  return { depth: Math.min(MAXES.depth, pts), why };
+}
+
 // rate(design) works on any card. `valid` is false when Forge must be blocked.
+// design.cost is the cost the PLAYER picked; out.cost is the fair cost. Until a cost is picked, the fair one stands in.
 export function rate(design) {
   const errors = validate(design);
   const pw = computeNet(design);
   const cost = costFor(pw.net);
-  const out = { valid: errors.length === 0, errors, power: pw, cost, efficiency: null, parts: null, total: 0, grade: null, cap: null, reasons: [] };
+  const out = { valid: errors.length === 0, errors, power: pw, cost, chosen: null, efficiency: null, parts: null, max: MAXES, total: 0, grade: null, cap: null, reasons: [] };
   if (!design.type || cost === null || design.effects.length === 0) return out;
-  const eff = efficiencyFor(pw.net, cost);
-  out.efficiency = eff;
+  const chosen = Number.isInteger(design.cost) ? design.cost : cost;
+  out.chosen = chosen;
+  out.efficiency = pw.net / (2.5 + 5 * chosen);
 
   const reasons = {};
-  // 1. Budget fit
-  const budget = 20 * clamp((eff - RATING.budgetFloor) / RATING.budgetSpan, 0, 1);
-  reasons.budget = eff >= 0.95 - EPS ? `Uses ${Math.round(eff * 100)}% of cost ${cost}. Full marks.` : `Uses ${Math.round(eff * 100)}% of cost ${cost}. Fill more of the tier.`;
+  // 1. Budget fit: did the player pay the fair price?
+  const budget = budgetScore(chosen, cost);
+  reasons.budget = budgetReason(chosen, cost);
 
   // 2. Focus
   let focus = 20;
@@ -127,33 +167,24 @@ export function rate(design) {
     ? (pd.sum >= 0 ? 'Parts work together.' : 'Some parts fight each other.')
     : (typeFit > 0 ? 'Fits the card type, but the parts do not combine.' : 'Parts do not combine yet.');
 
-  // 4. Tension
-  const conditional = design.type === 'permanent' && design.permanent && design.permanent.trigger && TRIGGERS[design.permanent.trigger].conditional;
-  const conditionCut = conditional ? RATING.conditionCut * pw.gross : 0;
-  const t = pw.gross > 0 ? (pw.keywordCut + pw.pricePP + conditionCut) / pw.gross : 0;
-  let tension;
-  if (t <= EPS) tension = 8;
-  else if (t < 0.15 - EPS) tension = 12;
-  else if (t <= 0.40 + EPS) tension = 20;
-  else if (t <= 0.55 + EPS) tension = 14;
-  else tension = 6;
-  reasons.tension = t <= EPS ? 'No tradeoff at all. Give something up.' : t < 0.15 - EPS ? 'A small tradeoff. A bit more would be interesting.' : t <= 0.40 + EPS ? 'A real tradeoff. This is the sweet spot.' : 'The tradeoff eats too much of the card.';
+  // 4. Depth
+  const dd = depthDetail(design);
+  const depth = dd.depth;
+  reasons.depth = dd.why.length ? `Makes you think: ${dd.why.slice(0, 3).join(', ')}.` : 'No real decision. It plays itself.';
 
   // 5. Originality
   const od = originalityDistance(design);
   const originality = 20 * clamp(od.d / 0.6, 0, 1);
   reasons.originality = od.d <= EPS ? `Identical to the classic ${od.nearest.name}.` : od.d >= 0.6 - EPS ? 'Nothing like the classics.' : `Close to the classic ${od.nearest.name}.`;
 
-  const parts = { budget, focus, synergy, tension, originality };
-  const raw = budget + focus + synergy + tension + originality;
+  const parts = { budget, focus, synergy, depth, originality };
+  const raw = budget + focus + synergy + depth + originality;
   let total = Math.round(raw);
   let cap = null;
-  if (loopRisk(design, cost)) {
+  if (loopRisk(design, chosen)) {
     cap = RATING.loopCap;
     if (total > cap) total = cap;
     reasons.cap = 'This could loop forever, so the grade is capped at C-.';
   }
-  return { ...out, parts, raw, total, grade: gradeFor(total), cap, reasons, words, tValue: t };
+  return { ...out, parts, raw, total, grade: gradeFor(total), cap, reasons, words };
 }
-
-

@@ -277,6 +277,8 @@ function HeroSection() {
   })
   const [rev, setRev] = useState<Reveal>({ nav: !playing, headline: !playing, tagline: !playing })
   const openAll = () => setRev({ nav: true, headline: true, tagline: true })
+  const { scrollY } = useScroll()
+  const titleScale = useTransform(scrollY, [0, 520], [1, 0.45])
 
   const handleReveal = (stage: ForgeStage) => {
     if (stage === 'kind') setRev(r => ({ ...r, nav: true }))
@@ -307,31 +309,19 @@ function HeroSection() {
         </nav>
       </FadeIn>
 
-      {/* Hero Heading */}
-      {playing ? (
-        <div className={`mt-4 md:mt-5 px-6 ${sealCls(rev.headline)}`} inert={!rev.headline}>
-          <h1 className="hero-heading hero-heading-compact font-black uppercase tracking-tight leading-[0.95] text-center">
-            We Are Rebel Realm
+      {/* Hero heading: two lines, big, and it shrinks as the visitor scrolls down */}
+      <FadeIn delay={0.15} y={30}>
+        <motion.div
+          className={`hero-title ${playing ? 'is-play' : ''} px-4 ${sealCls(rev.headline)}`}
+          style={{ scale: titleScale, transformOrigin: 'top center' }}
+          inert={!rev.headline}
+        >
+          <h1 className="hero-heading text-center">
+            <span className="hero-welcome">Welcome to the</span>
+            <span className="hero-realm">Rebel Realm</span>
           </h1>
-        </div>
-      ) : (
-        <div className="mt-6 sm:mt-4 md:mt-2">
-          <div className="overflow-hidden">
-            <FadeIn delay={0.15} y={40}>
-              <h1 className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center">
-                We Are
-              </h1>
-            </FadeIn>
-          </div>
-          <div className="overflow-hidden">
-            <FadeIn delay={0.25} y={40}>
-              <h1 className="hero-heading hero-heading-size font-black uppercase tracking-tight leading-[0.95] whitespace-nowrap w-full text-center">
-                Rebel Realm
-              </h1>
-            </FadeIn>
-          </div>
-        </div>
-      )}
+        </motion.div>
+      </FadeIn>
 
       {/* Game, or the classic logo mark once it has collapsed */}
       {playing ? (

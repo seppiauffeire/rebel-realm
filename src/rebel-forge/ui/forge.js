@@ -1,4 +1,4 @@
-import { EFFECTS, FAMILIES, FAMILY_ORDER, TYPES, TYPE_ORDER, KEYWORDS, KEYWORD_ORDER, PRICES, PRICE_ORDER, TRIGGERS, TRIGGER_ORDER, LIFESPANS, LIFESPAN_ORDER, FLAGS, MAX_KEYWORDS, ceiling } from '../engine/balance.js';
+import { EFFECTS, FAMILIES, FAMILY_ORDER, TYPES, TYPE_ORDER, KEYWORDS, KEYWORD_ORDER, PRICES, PRICE_ORDER, TRIGGERS, TRIGGER_ORDER, LIFESPANS, LIFESPAN_ORDER, FLAGS, MAX_KEYWORDS, MAXES, COST_NAMES } from '../engine/balance.js';
 import { reducer, initialState, derive, stepsFor, stepComplete } from '../engine/reducer.js';
 import { effectAllowed, keywordAllowed, selfFeeds } from '../engine/validate.js';
 import { bestSingleStep } from '../engine/coach.js';
@@ -9,13 +9,14 @@ import { createCard } from './card.js';
 import { createSound, haptic, countUp, sparks, forgeSequence } from './fx.js';
 import { shareCard, downloadCard, cardLink } from './share.js';
 
-const TITLES = { kind: 'Pick a card type', effects: 'What does it do?', effectsPerm: 'What happens?', when: 'When does it trigger?', life: 'How long does it last?', rules: 'Add rules', price: 'Pay a price (optional)', name: 'Name your card' };
-const SUB_NAMES = { budget: 'Budget fit', focus: 'Focus', synergy: 'Synergy', tension: 'Tension', originality: 'Originality' };
-const SUB_ORDER = ['budget', 'focus', 'synergy', 'tension', 'originality'];
+const TITLES = { kind: 'Pick a card type', effects: 'What does it do?', effectsPerm: 'What happens?', when: 'When does it trigger?', life: 'How long does it last?', rules: 'Add rules', price: 'Pay a price (optional)', cost: 'Set the cost', name: 'Name your card' };
+const SUB_NAMES = { budget: 'Budget fit', focus: 'Focus', synergy: 'Synergy', depth: 'Depth', originality: 'Originality' };
+const SUB_ORDER = ['budget', 'focus', 'synergy', 'depth', 'originality'];
+const POWER_WORDS = [[0.08, 'Tiny'], [0.22, 'Light'], [0.42, 'Solid'], [0.62, 'Strong'], [0.82, 'Heavy'], [9, 'Huge']];
+const powerWord = (f) => POWER_WORDS.find(([m]) => f < m)[1];
 const FAMILY_TIP = 'Set Up effects only work on Set Up and Permanent cards.';
 const PAGE = 6;
 const defaultFamily = (t) => ({ attack: 'damage', defend: 'defense', setup: 'setup', instant: 'defense', permanent: 'cards' }[t] || 'damage');
-const band = (e) => (e === null ? 'none' : e >= 0.95 - 1e-9 ? 'sweet' : e >= 0.7 ? 'ok' : 'low');
 
 export function mount(root, opts = {}) {
   const store = createStore(reducer, initialState());
@@ -119,6 +120,13 @@ export function mount(root, opts = {}) {
     return `<div class="rf-chips" role="radiogroup" aria-label="Price">${chips}</div>${amt}<p class="rf-note">${d.type === 'permanent' ? 'A price on a Permanent card is paid once, when you play it.' : 'A price buys back power. A small one is the sweet spot.'}</p>`;
   }
 
+  function costPanel(st) {
+    const d = st.design;
+    const tiles = COST_NAMES.map((n, c) => `<button type="button" role="radio" class="rf-ctile${d.cost === c ? ' on' : ''}" data-act="cost" data-v="${c}" data-key="cost-${c}" aria-checked="${d.cost === c}"><b>${c}</b><small>${n}</small></button>`).join('');
+    return `<div class="rf-costs" role="radiogroup" aria-label="Energy cost">${tiles}</div>
+      <p class="rf-note">Watch the Power bar. A stronger card should cost more, a weaker one less. A card with no downsides and a low cost is too good to be true. You will see how close you got.</p>`;
+  }
+
   function namePanel(st) {
     const d = st.design;
     return `<label class="rf-lbl2" for="rf-name-in">Card name</label>
@@ -134,6 +142,7 @@ export function mount(root, opts = {}) {
       case 'life': return optionList(LIFESPAN_ORDER.map((id) => ({ id, text: LIFESPANS[id].text })), st.design.permanent && st.design.permanent.lifespan, 'life', 'Lifespan');
       case 'rules': return rulesPanel(st);
       case 'price': return pricePanel(st);
+      case 'cost': return costPanel(st);
       case 'name': return namePanel(st);
       default: return '';
     }
@@ -167,8 +176,11 @@ export function mount(root, opts = {}) {
   function renderResult(st, view) {
     const r = st.result;
     if (ui.forging) { panel.innerHTML = `<div class="rf-ph"><span class="rf-pstep">Forging</span><h2 class="rf-ptitle" tabindex="-1">Hold on</h2></div><div class="rf-pbody"><p class="rf-note">The card is heating up.</p></div>`; return; }
-    const tip = bestSingleStep(st.design);
-    const subs = SUB_ORDER.map((k, i) => `<li class="rf-sub" style="--d:${i * 130}ms"><span class="rf-sn">${SUB_NAMES[k]}</span><span class="rf-sbar"><i style="--w:${(r.parts[k] / 20) * 100}%"></i></span><span class="rf-sv">${r.parts[k].toFixed(1).replace(/\.0$/, '')}<small>/20</small></span><p>${esc(r.reasons[k])}</p></li>`).join('');
+    const costGain = 25 - r.parts.budget;
+    const tip = r.chosen !== r.cost
+      ? { gain: costGain, label: `Set the cost to ${r.cost} instead of ${r.chosen}` }
+      : bestSingleStep(st.design);
+    const subs = SUB_ORDER.map((k, i) => `<li class="rf-sub" style="--d:${i * 130}ms"><span class="rf-sn">${SUB_NAMES[k]}</span><span class="rf-sbar"><i style="--w:${(r.parts[k] / MAXES[k]) * 100}%"></i></span><span class="rf-sv">${r.parts[k].toFixed(1).replace(/\.0$/, '')}<small>/${MAXES[k]}</small></span><p>${esc(r.reasons[k])}</p></li>`).join('');
     panel.innerHTML = `
       <div class="rf-ph"><span class="rf-pstep">Your card</span><h2 class="rf-ptitle" tabindex="-1">${esc(st.design.name)}</h2></div>
       <div class="rf-res">
@@ -197,25 +209,27 @@ export function mount(root, opts = {}) {
     g.dataset.step = st.step;
   }
 
+  // The meter shows how strong the card is, not what it should cost. Reading the cost off it is the player's job.
   function renderMeter(st, view) {
     const m = $(g, '.rf-meter');
     const r = view.rating;
     const fill = $(m, '.rf-fill');
-    if (r && r.cost === null && r.power && r.power.net > 27.5) {
-      $(m, '.rf-mval').textContent = `${r.power.net.toFixed(1)} / 27.5`; $(m, '.rf-mcost').textContent = 'Over budget'; $(m, '.rf-mpct').textContent = 'Trim a number';
+    const d = st.design;
+    $(m, '.rf-mcost').textContent = Number.isInteger(d.cost) ? `Cost ${d.cost}` : 'Cost ?';
+    if (r && r.power && r.power.net > 27.5) {
+      $(m, '.rf-mval').textContent = 'Too strong'; $(m, '.rf-mpct').textContent = 'Trim a number';
       fill.style.setProperty('--w', '100%'); m.dataset.band = 'over'; m.setAttribute('aria-valuenow', 100); return;
     }
     if (!r || !r.parts) {
-      $(m, '.rf-mval').textContent = '0'; $(m, '.rf-mcost').textContent = 'Cost ?'; $(m, '.rf-mpct').textContent = st.design.type ? 'Add an effect' : 'Pick a type';
+      $(m, '.rf-mval').textContent = '-'; $(m, '.rf-mpct').textContent = d.type ? 'Add an effect' : 'Pick a type';
       fill.style.setProperty('--w', '0%'); m.dataset.band = 'none'; m.setAttribute('aria-valuenow', 0); return;
     }
-    const pct = Math.max(0, Math.min(100, Math.round(r.efficiency * 100)));
-    $(m, '.rf-mval').textContent = `${r.power.net.toFixed(1)} / ${ceiling(r.cost)}`;
-    $(m, '.rf-mcost').textContent = `Cost ${r.cost}`;
-    $(m, '.rf-mpct').textContent = `${pct}% full`;
-    fill.style.setProperty('--w', `${pct}%`);
-    m.dataset.band = band(r.efficiency);
-    m.setAttribute('aria-valuenow', pct);
+    const f = Math.max(0, Math.min(1, r.power.net / 27.5));
+    $(m, '.rf-mval').textContent = powerWord(f);
+    $(m, '.rf-mpct').textContent = '';
+    fill.style.setProperty('--w', `${Math.round(f * 100)}%`);
+    m.dataset.band = 'none';
+    m.setAttribute('aria-valuenow', Math.round(f * 100));
   }
 
   // ---------- reveal bookkeeping ----------
@@ -253,18 +267,6 @@ export function mount(root, opts = {}) {
       ui.toastTimer = setTimeout(() => { t.hidden = true; }, 2800);
       say(st.toast.text);
     }
-    // announcements and sounds on cost / band changes
-    const r = view.rating;
-    const cost = r && r.parts ? r.cost : null;
-    if (st.step !== 'result' && cost !== null) {
-      const b = band(r.efficiency);
-      if (ui.prevCost !== null && cost !== ui.prevCost) { say(`Cost is now ${cost}. Power is ${Math.round(r.efficiency * 100)} percent full.`); (cost > ui.prevCost ? sound.up : sound.down)(); }
-      else if (b !== ui.prevBand && ui.prevBand !== 'none') say(b === 'sweet' ? 'You are in the sweet spot.' : b === 'low' ? 'The card is underpowered for its cost.' : 'Power is in a fair range.');
-      ui.prevCost = cost; ui.prevBand = b;
-    }
-    if (!st.design.type) { ui.prevCost = null; ui.prevBand = 'none'; }
-    if (st.step === 'kind' && !st.design.type) { ui.prevCost = null; }
-
     // fx
     if (st.fx && (!prev || st.fx !== prev.fx)) playFx(st, view);
     if (prev && st.step !== prev.step && ui.interacted && st.step !== 'result') { const h = $(panel, '.rf-ptitle'); if (h) h.focus({ preventScroll: true }); }
@@ -294,7 +296,7 @@ export function mount(root, opts = {}) {
         const h = $(panel, '.rf-ptitle'); if (h) h.focus({ preventScroll: true });
       }
     });
-    track('rf_forged', { type: st.design.type, score: r.total, grade: r.grade, cost: r.cost, effects_count: st.design.effects.length });
+    track('rf_forged', { type: st.design.type, score: r.total, grade: r.grade, cost: st.design.cost, fair_cost: r.cost, effects_count: st.design.effects.length });
   }
 
   // ---------- events ----------
@@ -329,6 +331,7 @@ export function mount(root, opts = {}) {
     kw: (b) => { D({ type: 'TOGGLE_KEYWORD', id: b.dataset.v }); track('rf_keyword_toggled', { id: b.dataset.v }); sound.click(); },
     once: () => D({ type: 'TOGGLE_ONCE' }),
     price: (b) => { D({ type: 'SET_PRICE', id: b.dataset.v || null }); if (b.dataset.v) track('rf_price_set', { id: b.dataset.v }); sound.click(); },
+    cost: (b) => { D({ type: 'SET_COST', value: Number(b.dataset.v) }); track('rf_cost_set', { cost: Number(b.dataset.v) }); sound.click(); },
     next: (b) => { D({ type: 'NEXT' }); if (b.getAttribute('aria-disabled') !== 'true') sound.click(); },
     back: () => { D({ type: 'BACK' }); sound.click(); },
     goto: (b) => D({ type: 'GOTO', step: b.dataset.v }),

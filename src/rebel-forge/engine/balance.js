@@ -53,6 +53,17 @@ export const EFFECTS = {
   expose: { family: 'disrupt', pp: 2.5, min: 1, max: 3, step: 1, def: 1, short: 'Expose', text: (n) => `Enemy takes 50% more damage for ${n} ${s(n, 'turn', 'turns')}` },
   weaken: { family: 'disrupt', pp: 2.5, min: 1, max: 3, step: 1, def: 1, short: 'Weaken', text: (n) => `Enemy deals 25% less damage for ${n} ${s(n, 'turn', 'turns')}` },
   cancel: { family: 'disrupt', instantOnly: true, flat: true, pp: 8.0, min: 1, max: 1, step: 1, def: 1, short: 'Cancel', text: () => "Cancel the enemy's next card" },
+  // Added in v3: more parts so combos matter
+  burn: { family: 'damage', pp: 1.4, min: 1, max: 10, step: 1, def: 3, short: 'Burn', text: (n) => `Apply ${n} Burn` },
+  pierce: { family: 'damage', pp: 1.2, min: 1, max: 25, step: 1, def: 5, short: 'Pierce', text: (n) => `Deal ${n} damage that ignores Block` },
+  execute: { family: 'damage', pp: 1.15, min: 1, max: 15, step: 1, def: 4, short: 'Execute', text: (n) => `Deal ${n} damage, doubled if the enemy has 10 or less HP` },
+  armor: { family: 'defense', pp: 3.2, min: 1, max: 4, step: 1, def: 1, short: 'Armor', text: (n) => `Gain ${n} Armor: take ${n} less damage from every hit` },
+  regen: { family: 'defense', pp: 3.8, min: 1, max: 4, step: 1, def: 1, short: 'Regen', text: (n) => `Heal ${n} at the start of each of your next 3 turns` },
+  tutor: { family: 'cards', flat: true, pp: 4.5, min: 1, max: 1, step: 1, def: 1, short: 'Tutor', text: () => 'Search your deck for any card and add it to your hand' },
+  copyLast: { family: 'cards', flat: true, pp: 5.5, min: 1, max: 1, step: 1, def: 1, short: 'Copy last card', text: () => 'Add a copy of the last card you played to your hand' },
+  nextFree: { family: 'setup', future: true, flat: true, pp: 7.5, min: 1, max: 1, step: 1, def: 1, short: 'Next card free', text: () => 'Your next card costs 0' },
+  silence: { family: 'disrupt', flat: true, pp: 3.5, min: 1, max: 1, step: 1, def: 1, short: 'Silence', text: () => 'Enemy cannot play Instant cards next turn' },
+  junkEnemy: { family: 'disrupt', pp: 2.0, min: 1, max: 3, step: 1, def: 1, short: 'Junk the enemy', text: (n) => `Add ${n} Junk ${s(n, 'card', 'cards')} to the enemy deck` },
 };
 
 export const KEYWORDS = {
@@ -61,9 +72,11 @@ export const KEYWORDS = {
   startsInHand: { name: 'Starts in Hand', text: 'Always in your opening hand.', flat: 0.5 },
   useItOrLoseIt: { name: 'Use It or Lose It', text: 'Removed if still in hand at end of turn.', grossMult: 0.9, conflicts: ['keepInHand'] },
   playTwice: { name: 'Play Twice', text: 'Its effects happen two times.', playMult: 1.8 },
-  chainBonus: { name: 'Bonus After Another Card', text: 'Stronger if you already played a card this turn.', playMult: 1.2 },
+  chainBonus: { name: 'Bonus After Another Card', text: 'Stronger if you already played a card this turn.', playMult: 1.2, conflicts: ['opener'] },
+  opener: { name: 'Opener', text: 'Stronger if it is the first card you play this turn.', playMult: 1.2, conflicts: ['chainBonus'] },
+  overload: { name: 'Overload', text: 'Next turn you start with 1 less energy.', grossMult: 0.75 },
 };
-export const KEYWORD_ORDER = ['singleUse', 'keepInHand', 'startsInHand', 'useItOrLoseIt', 'playTwice', 'chainBonus'];
+export const KEYWORD_ORDER = ['singleUse', 'keepInHand', 'startsInHand', 'useItOrLoseIt', 'playTwice', 'chainBonus', 'opener', 'overload'];
 export const PERMANENT_KEYWORDS = ['startsInHand', 'keepInHand'];
 export const MAX_KEYWORDS = 2;
 
@@ -71,9 +84,10 @@ export const PRICES = {
   loseHP: { name: 'Lose HP', credit: 0.9, min: 1, max: 6, text: (n) => `Lose ${n} HP when you play this.`, short: (n) => `Lose ${n} HP` },
   discardCards: { name: 'Discard Cards', credit: 1.5, min: 1, max: 3, text: (n) => `Discard ${n} ${s(n, 'card', 'cards')} when you play this.`, short: (n) => `Discard ${n} ${s(n, 'card', 'cards')}` },
   addJunk: { name: 'Add Junk Cards', credit: 2.0, min: 1, max: 2, text: (n) => `Add ${n} Junk ${s(n, 'card', 'cards')} to your deck.`, short: (n) => `Add ${n} Junk ${s(n, 'card', 'cards')}` },
+  skipDraw: { name: 'Draw Less Next Turn', credit: 1.5, min: 1, max: 2, text: (n) => `You draw ${n} fewer ${s(n, 'card', 'cards')} next turn.`, short: (n) => `Draw ${n} fewer next turn` },
   enemyDraws: { name: 'Enemy Draws Cards', credit: 3.0, min: 1, max: 2, text: (n) => `The enemy draws ${n} ${s(n, 'card', 'cards')}.`, short: (n) => `Enemy draws ${n}` },
 };
-export const PRICE_ORDER = ['loseHP', 'discardCards', 'addJunk', 'enemyDraws'];
+export const PRICE_ORDER = ['loseHP', 'discardCards', 'skipDraw', 'addJunk', 'enemyDraws'];
 
 export const TRIGGERS = {
   startOfTurn: { text: 'At the start of your turn', rate: 1.0, conditional: false, selfFeed: [] },
@@ -86,6 +100,8 @@ export const TRIGGERS = {
   enemyAttacks: { text: 'When the enemy attacks', rate: 1.0, conditional: true, selfFeed: [] },
   enemyPlaysCard: { text: 'When the enemy plays a card', rate: 2.0, conditional: true, selfFeed: [] },
   youGainBlock: { text: 'Every time you gain Block', rate: 1.2, conditional: true, selfFeed: ['block', 'doubleBlock', 'blockPerCard'] },
+  youHeal: { text: 'Every time you heal', rate: 1.0, conditional: true, selfFeed: ['heal', 'regen'] },
+  youPlayInstant: { text: 'Every time you play an Instant', rate: 0.7, conditional: true, selfFeed: [] },
   youDiscard: { text: 'Every time you discard a card', rate: 0.8, conditional: true, selfFeed: ['cycle'] },
 };
 export const TRIGGER_ORDER = Object.keys(TRIGGERS);
@@ -111,6 +127,8 @@ export const TYPE_ORDER = ['attack', 'defend', 'setup', 'instant', 'permanent'];
 export const INSTANT_FIT = ['block', 'doubleBlock', 'thorns', 'heal', 'stun', 'weaken', 'cancel'];
 
 // Rating knobs
+export const MAXES = { budget: 25, focus: 20, synergy: 20, depth: 15, originality: 20 };
+export const COST_NAMES = ['Free', 'Cheap', 'Light', 'Mid', 'Heavy', 'Huge'];
 export const RATING = {
   budgetFloor: 0.5,
   budgetSpan: 0.45,
@@ -157,6 +175,24 @@ export const PAIRS_RAW = [
   ['nextAttackBonus', 'nextCostLess', 4], ['nextAttackBonus', 'expose', 3], ['nextAttackBonus', 'damage', 2], ['keepCards', 'peek', 2],
   ['nextCardTwice', 'handCostLess', 2], ['extraDrawNext', 'peek', 3], ['extraDrawNext', 'nextCostLess', 4], ['attackBoostFight', 'expose', 3],
   ['block', 'heal', 3], ['playAttack', 'poison', 3], ['startOfTurn', 'poison', 2], ['youTakeDamage', 'thorns', 3], ['enemyAttacks', 'weaken', 3],
+  // v3 parts
+  ['burn', 'poison', -2], ['burn', 'expose', 3], ['burn', 'stun', 2], ['burn', 'startOfTurn', 2], ['burn', 'damageAll', 2],
+  ['pierce', 'expose', 3], ['pierce', 'nextAttackBonus', 3], ['pierce', 'attackBoostFight', 3], ['pierce', 'damage', -3], ['pierce', 'block', 2],
+  ['execute', 'expose', 4], ['execute', 'poison', 3], ['execute', 'stun', 3], ['execute', 'weaken', 2], ['execute', 'burn', 2],
+  ['armor', 'thorns', 4], ['armor', 'heal', 3], ['armor', 'block', -2], ['armor', 'weaken', 3], ['armor', 'enemyAttacks', 4], ['armor', 'youTakeDamage', 3],
+  ['regen', 'heal', -3], ['regen', 'weaken', 2], ['regen', 'block', 3], ['regen', 'youTakeDamage', 3], ['regen', 'loseHP', 3], ['regen', 'startOfTurn', 2],
+  ['tutor', 'draw', -2], ['tutor', 'nextCostLess', 4], ['tutor', 'nextFree', 4], ['tutor', 'energy', 3], ['tutor', 'keepCards', 3], ['tutor', 'discardCards', 3],
+  ['copyLast', 'nextCardTwice', -4], ['copyLast', 'playAttack', 3], ['copyLast', 'nextCostLess', 3], ['copyLast', 'handCostLess', 4], ['copyLast', 'nextFree', 3],
+  ['nextFree', 'draw', 3], ['nextFree', 'nextAttackDouble', 4], ['nextFree', 'nextCardTwice', 4], ['nextFree', 'nextCostLess', -4], ['nextFree', 'perCardPlayed', 3],
+  ['silence', 'cancel', -3], ['silence', 'stun', 3], ['silence', 'enemyPlaysCard', 3], ['silence', 'weaken', 2], ['silence', 'enemyDiscard', 3],
+  ['junkEnemy', 'enemyDiscard', 3], ['junkEnemy', 'perEnemyCard', 3], ['junkEnemy', 'enemyDraws', -4], ['junkEnemy', 'stun', 2],
+  ['youHeal', 'block', 3], ['youHeal', 'damage', 4], ['youHeal', 'thorns', 3], ['youHeal', 'draw', 3], ['youHeal', 'burn', 3],
+  ['youPlayInstant', 'block', 3], ['youPlayInstant', 'draw', 3], ['youPlayInstant', 'weaken', 3], ['youPlayInstant', 'heal', 2],
+  ['skipDraw', 'energy', 3], ['skipDraw', 'extraDrawNext', -3], ['skipDraw', 'draw', -3], ['skipDraw', 'nextFree', 3],
+  ['chainBonus', 'nextCostLess', 3], ['chainBonus', 'handCostLess', 3], ['chainBonus', 'copyLast', 3], ['chainBonus', 'perCardPlayed', 3],
+  ['opener', 'tutor', 3], ['opener', 'execute', 2], ['opener', 'nextFree', -3], ['opener', 'nextCostLess', 3],
+  ['overload', 'energy', 4], ['overload', 'nextFree', 3], ['overload', 'handCostLess', 3], ['overload', 'nextCostLess', 2],
+  ['keepInHand', 'tutor', 2], ['keepInHand', 'cancel', 3], ['singleUse', 'perEnemyCard', 2],
 ];
 
 // Classic reference cards (token sets) for the Originality score.

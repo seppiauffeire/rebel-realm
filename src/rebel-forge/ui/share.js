@@ -24,7 +24,7 @@ export async function copyText(text) {
 // Returns 'shared', 'copied' or 'failed'. The shared text never names another game.
 export async function shareCard(design, rating) {
   const link = cardLink(design);
-  const text = `I forged "${design.name}", a ${TYPES[design.type].label} card at cost ${rating.cost}. Think you can balance it better?`;
+  const text = `I forged "${design.name}", a ${TYPES[design.type].label} card at cost ${design.cost ?? rating.cost}. Think you can balance it better?`;
   if (navigator.share && matchMedia('(pointer: coarse)').matches) {
     try { await navigator.share({ title: 'Rebel Forge card', text, url: link }); return 'shared'; } catch (e) { if (e && e.name === 'AbortError') return 'failed'; }
   }
@@ -80,7 +80,7 @@ export function cardCanvas(design, rating, cardEl) {
   ctx.beginPath(); for (let i = 0; i < 6; i++) { const ang = -Math.PI / 2 + i * Math.PI / 3; ctx.lineTo(gx + 46 * Math.cos(ang), gy + 46 * Math.sin(ang)); } ctx.closePath();
   ctx.fillStyle = color; ctx.fill();
   ctx.fillStyle = c('--rf-on', '#0b0b0e'); ctx.font = `800 50px ${display}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(String(rating.cost), gx, gy + 3); ctx.textBaseline = 'alphabetic';
+  ctx.fillText(String(design.cost ?? rating.cost), gx, gy + 3); ctx.textBaseline = 'alphabetic';
   // type, centered under the art
   let y = artY + artH + 40;
   ctx.fillStyle = color; ctx.font = `700 22px ${body}`; ctx.fillText(TYPES[design.type].label.toUpperCase().split('').join(' '), cx, y);

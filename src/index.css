@@ -218,9 +218,6 @@ body::before {
   user-select: none;
 }
 
-.hero-heading-compact {
-  font-size: clamp(1.75rem, 4.4vw, 3.6rem);
-}
 
 /* ─── Rebel Forge skin ────────────────────────────────
    Maps the game's --rf-* tokens onto the site's own
@@ -228,9 +225,9 @@ body::before {
    controls, soft radii) so it reads as part of the page.
    Type colors (attack/defend/…) stay the game's own. ── */
 .rf-skin {
-  --rf-card-w: clamp(190px, calc((100dvh - 340px) * 0.714), 290px);
+  --rf-card-w: clamp(190px, calc((100dvh - 395px) * 0.714), 290px);
   --rf-card-w-sm: min(68vw, 250px);
-  --rf-panel-min: clamp(300px, calc(100dvh - 330px), 500px);
+  --rf-panel-min: clamp(300px, calc(100dvh - 385px), 500px);
 }
 .rf-skin .rf-game {
   --rf-display: 'Kanit', system-ui, sans-serif;
@@ -281,8 +278,26 @@ html.light .rf-skin .rf-game {
 /* Short laptop screens (1366x768): give nav + headline + tagline more of the budget. */
 @media (max-height: 820px) {
   .rf-skin {
-    --rf-card-w: clamp(180px, calc((100dvh - 395px) * 0.714), 270px);
-    --rf-panel-min: clamp(280px, calc(100dvh - 385px), 460px);
+    --rf-card-w: clamp(170px, calc((100dvh - 445px) * 0.714), 260px);
+    --rf-panel-min: clamp(270px, calc(100dvh - 435px), 440px);
   }
   .rf-skin .rf-game { padding: 0.75rem 1rem 0.9rem; }
+}
+
+/* ─── Hero title: "Welcome to the / Rebel Realm" ───── */
+.hero-title { margin-top: 1.25rem; will-change: transform; }
+.hero-title h1 {
+  display: flex; flex-direction: column; align-items: center;
+  font-weight: 900; text-transform: uppercase; line-height: 0.95; letter-spacing: -0.02em; white-space: nowrap;
+}
+.hero-welcome { font-size: clamp(1.1rem, 3.6vw, 3.6rem); letter-spacing: 0.14em; margin-bottom: 0.15em; }
+.hero-realm { font-size: clamp(3rem, 16vw, 17.5vw); }
+.hero-title.is-play { margin-top: 0.6rem; }
+.hero-title.is-play .hero-welcome { font-size: clamp(0.95rem, 2.4vw, 2.3rem); }
+.hero-title.is-play .hero-realm { font-size: clamp(2.2rem, 6.6vw, 5.8rem); }
+@media (max-height: 820px) {
+  .hero-welcome { font-size: clamp(1rem, 3vw, 2.6rem); }
+  .hero-realm { font-size: clamp(2rem, 9vw, 6rem); }
+  .hero-title.is-play .hero-welcome { font-size: clamp(0.9rem, 2vw, 1.8rem); }
+  .hero-title.is-play .hero-realm { font-size: clamp(2rem, 5.4vw, 4.6rem); }
 }

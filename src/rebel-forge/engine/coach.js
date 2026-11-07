@@ -1,4 +1,4 @@
-import { EFFECTS, KEYWORDS, KEYWORD_ORDER, PRICES, PRICE_ORDER, TYPES, TRIGGERS, TRIGGER_ORDER, LIFESPANS, LIFESPAN_ORDER, EFFECTS as E, FLAGS, ceiling, EPS } from './balance.js';
+import { KEYWORDS, KEYWORD_ORDER, PRICES, PRICE_ORDER, TYPES, TRIGGERS, TRIGGER_ORDER, LIFESPANS, LIFESPAN_ORDER, EFFECTS as E } from './balance.js';
 import { effectAllowed, keywordAllowed, selfFeeds, validate } from './validate.js';
 import { rate } from './rating.js';
 import { effectText } from './text.js';
@@ -82,12 +82,13 @@ export function neighbors(design) {
 // The single change with the biggest score gain, or null when nothing helps.
 export function bestSingleStep(design) {
   const base = rate(design);
-  const baseScore = base.cap ? Math.min(base.raw, base.cap) : base.raw ?? 0;
+  const noBudget = (r) => (r.cap ? Math.min(r.raw, r.cap) : r.raw) - r.parts.budget;
+  const baseScore = base.parts ? noBudget(base) : 0;
   let best = null;
   for (const n of neighbors(design)) {
     const r = rate(n.design);
     if (!r.valid || r.parts === null) continue;
-    const score = r.cap ? Math.min(r.raw, r.cap) : r.raw;
+    const score = noBudget(r);
     const gain = score - baseScore;
     if (gain > 0.5 && (!best || gain > best.gain)) best = { gain, label: n.label, design: n.design, rating: r, kind: n.kind };
   }
@@ -102,14 +103,8 @@ export function coachHint(design) {
   const r = rate(design);
   if (r.parts === null) return 'Add an effect to see how strong the card is.';
   if (r.cap) return 'This could loop forever. Limit it to once per turn or take off the free energy.';
-  const pct = Math.round(r.efficiency * 100);
-  if (r.efficiency < 0.7) return `You fill ${pct}% of cost ${r.cost}. Add a little more power.`;
-  if (r.cost > 0) {
-    const over = r.power.net - ceiling(r.cost - 1);
-    if (over > EPS && over <= 1.0) return `You are ${over < 1 ? 'a hair' : '1 point'} over cost ${r.cost - 1}. Trim a number to save an energy.`;
-  }
   if (r.parts.focus <= 15 && r.reasons.focus.includes('no clear lead')) return 'Two big effects fight for attention. Pick one to lead.';
   const step = bestSingleStep(design);
   if (step) return `Try this: ${step.label.charAt(0).toLowerCase()}${step.label.slice(1)}.`;
-  return r.total >= 95 ? 'This is as good as it gets. Forge it.' : 'Nicely balanced. Name it and forge it.';
+  return 'Nothing left to fix. Pick a fair cost and forge it.';
 }

@@ -9,13 +9,13 @@ const clone = (d) => JSON.parse(JSON.stringify(d));
 
 // `auto` is the id of the starting effect a type comes with. It is a placeholder: adding another effect swaps it out
 // (unless the card still needs it), and editing its number makes it the player's own.
-export const blankDesign = () => ({ type: null, effects: [], keywords: [], price: null, permanent: null, name: '', auto: null });
+export const blankDesign = () => ({ type: null, effects: [], keywords: [], price: null, permanent: null, cost: null, name: '', auto: null });
 export const initialState = () => ({ step: 'kind', design: blankDesign(), history: [], toast: null, result: null, skipped: false, rev: 0, fx: null });
 
 export function stepsFor(type) {
   return type === 'permanent'
-    ? ['kind', 'when', 'effects', 'life', 'rules', 'price', 'name']
-    : ['kind', 'effects', 'rules', 'price', 'name'];
+    ? ['kind', 'when', 'effects', 'life', 'rules', 'price', 'cost', 'name']
+    : ['kind', 'effects', 'rules', 'price', 'cost', 'name'];
 }
 
 export function stepComplete(design, step) {
@@ -28,6 +28,7 @@ export function stepComplete(design, step) {
       return !req || design.effects.some((e) => EFFECTS[e.id].family === req);
     }
     case 'life': return !!(design.permanent && design.permanent.lifespan);
+    case 'cost': return Number.isInteger(design.cost);
     default: return true;
   }
 }
@@ -147,6 +148,12 @@ export function reducer(state, action) {
       if (d.price && d.price.id === action.id && d.price.amount === amount) return state;
       return change(state, (n) => { n.price = { id: action.id, amount }; });
     }
+    case 'SET_COST': {
+      if (!d.type) return state;
+      const cost = clamp(Math.round(Number(action.value)), 0, 5);
+      if (!Number.isFinite(cost) || cost === d.cost) return state;
+      return { ...state, design: { ...d, cost }, rev: state.rev + 1, result: null };
+    }
     case 'SET_NAME': {
       const name = String(action.value || '').normalize('NFKC').replace(/[^\p{L}\p{N} '.,!?&+\-]/gu, '').slice(0, NAME_MAX);
       return { ...state, design: { ...d, name } };
@@ -156,7 +163,7 @@ export function reducer(state, action) {
       const i = steps.indexOf(state.step);
       if (i < 0) return state;
       if (!stepComplete(d, state.step)) {
-        const why = state.step === 'kind' ? 'Pick a card type first.' : state.step === 'effects' ? `Add at least one ${{ damage: 'Damage', defense: 'Defense', setup: 'Set Up' }[TYPES[d.type].requires] || ''} effect to continue.`.replace('  ', ' ') : 'Make a choice to continue.';
+        const why = state.step === 'kind' ? 'Pick a card type first.' : state.step === 'cost' ? 'Pick the cost you think is fair.' : state.step === 'effects' ? `Add at least one ${{ damage: 'Damage', defense: 'Defense', setup: 'Set Up' }[TYPES[d.type].requires] || ''} effect to continue.`.replace('  ', ' ') : 'Make a choice to continue.';
         return toast(state, why);
       }
       if (state.step === 'name') return reducer(state, { type: 'FORGE' });
@@ -180,11 +187,12 @@ export function reducer(state, action) {
       const prev = state.history[state.history.length - 1];
       const keepName = state.design.name;
       const steps = stepsFor(prev.type);
-      return { ...state, design: { ...prev, name: keepName }, history: state.history.slice(0, -1), step: steps.includes(state.step) ? state.step : 'kind', rev: state.rev + 1, result: null };
+      return { ...state, design: { ...prev, name: keepName, cost: state.design.cost }, history: state.history.slice(0, -1), step: steps.includes(state.step) ? state.step : 'kind', rev: state.rev + 1, result: null };
     }
     case 'FORGE': {
       const errors = validate(d);
       if (errors.length) return toast(state, errors[0].text);
+      if (!Number.isInteger(d.cost)) return toast({ ...state, step: 'cost' }, 'Pick a cost first.');
       const design = clone(d);
       design.name = cleanName(design.name) || suggestName(design);
       return fx({ ...state, design, step: 'result', result: rate(design) }, 'forge');
