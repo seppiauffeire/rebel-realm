@@ -1,6 +1,7 @@
 import { EFFECTS, TYPES, KEYWORDS, KEYWORD_ORDER, PRICES, TRIGGERS, LIFESPANS } from '../engine/balance.js';
 import { html, esc, $, $$, reduced } from './dom.js';
 import { TYPE_ICON, FAMILY_ICON, UI_ICON } from './icons.js';
+import { artFor, artSvg } from './art.js';
 
 // Each type has its own silhouette. Paths are drawn in a 300 x 420 box.
 export const FRAMES = {
@@ -31,12 +32,12 @@ export function createCard(brand = 'Rebel Realm') {
     <div class="rf-card" data-type="none" role="img" aria-label="Your card">
       ${frameSvg()}
       <div class="rf-in">
-        <div class="rf-head">
-          <div class="rf-gem" title="Cost"><span class="rf-cost">?</span><span class="rf-gem-l">cost</span></div>
-          <div class="rf-typebar"><span class="rf-ticon"></span><span class="rf-tlabel">No type yet</span></div>
+        <div class="rf-artw">
+          <div class="rf-art" aria-hidden="true"></div>
+          <div class="rf-gem" title="Cost"><span class="rf-cost">?</span></div>
         </div>
+        <div class="rf-typebar"><span class="rf-ticon"></span><span class="rf-tlabel">No type yet</span></div>
         <div class="rf-name"><span class="rf-nametext"></span><span class="rf-bar" aria-hidden="true"><i>Redacted</i></span></div>
-        <div class="rf-art" aria-hidden="true"></div>
         <div class="rf-body">
           <div class="rf-ghost">Pick a card type to start forging.</div>
           <div class="rf-chain rf-when" hidden><span class="rf-lbl">When</span><span class="rf-lval"></span></div>
@@ -99,7 +100,6 @@ export function createCard(brand = 'Rebel Realm') {
     if (type !== lastType) {
       lastType = type;
       q('.rf-ticon').innerHTML = d.type ? TYPE_ICON[d.type] : '';
-      q('.rf-art').innerHTML = d.type ? TYPE_ICON[d.type] : '';
       q('.rf-tlabel').textContent = d.type ? TYPES[d.type].label : 'No type yet';
     }
     const perm = d.type === 'permanent';
@@ -129,6 +129,7 @@ export function createCard(brand = 'Rebel Realm') {
     const nameText = q('.rf-nametext');
     nameText.textContent = d.name || '';
     q('.rf-name').classList.toggle('named', !!d.name);
+    paintArt(d);
     fitName();
 
     // cost gem
@@ -144,6 +145,18 @@ export function createCard(brand = 'Rebel Realm') {
 
     const desc = !d.type ? 'Blank card' : `${d.name || 'Unnamed'}, ${TYPES[d.type].label}, cost ${cost === null ? 'unknown' : cost}. ${d.effects.map((e) => EFFECTS[e.id].text(e.amount)).join('. ')}`;
     el.setAttribute('aria-label', desc);
+  }
+
+  // Before a name is picked the art window shows a faint type glyph. Once there is a name, the card gets its illustration.
+  let artKey = '';
+  function paintArt(d) {
+    const box = q('.rf-art');
+    const key = d.name ? `a:${artFor(d.name).name}` : `t:${d.type || ''}`;
+    if (key === artKey) return;
+    artKey = key;
+    box.classList.toggle('has-art', !!d.name);
+    box.innerHTML = d.name ? artSvg(artFor(d.name)) : (d.type ? TYPE_ICON[d.type] : '');
+    if (d.name && !reduced() && box.animate) box.firstElementChild.animate([{ opacity: 0, transform: 'scale(.86)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.3,1)' });
   }
 
   // Long names shrink to fit the name bar instead of being clipped.

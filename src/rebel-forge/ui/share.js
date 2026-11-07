@@ -1,6 +1,7 @@
 import { encode } from '../engine/codec.js';
 import { TYPES, KEYWORDS, KEYWORD_ORDER } from '../engine/balance.js';
 import { renderCardText } from '../engine/text.js';
+import { artFor, drawArt } from './art.js';
 import { FRAMES, FRAME_INNER_PERMANENT } from './card.js';
 
 export function cardLink(design) {
@@ -66,27 +67,38 @@ export function cardCanvas(design, rating, cardEl) {
   ctx.textBaseline = 'alphabetic';
   const left = 30 + 26 * S;
   const right = 30 + 274 * S;
-  // cost gem
-  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(left + 22, 30 + 52, 28, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = c('--rf-on', '#0b0b0e'); ctx.font = `800 34px ${display}`; ctx.textAlign = 'center';
-  ctx.fillText(String(rating.cost), left + 22, 30 + 64);
-  // type
-  ctx.textAlign = 'right'; ctx.fillStyle = color; ctx.font = `700 20px ${body}`;
-  ctx.fillText(TYPES[design.type].label.toUpperCase(), right, 30 + 52);
+  const cx = (left + right) / 2;
+  // art window
+  const artY = 30 + 24 * S, artH = 250;
+  const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
+  const grad = ctx.createLinearGradient(left, artY, left + 120, artY + artH);
+  grad.addColorStop(0, color + '44'); grad.addColorStop(1, color + '0d');
+  rr(left, artY, right - left, artH, 14); ctx.fillStyle = grad; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = color; ctx.stroke();
+  drawArt(ctx, artFor(design.name), left, artY, right - left, artH, color);
+  // cost gem, number centered in it
+  const gx = left + 54, gy = artY + 54;
+  ctx.beginPath(); for (let i = 0; i < 6; i++) { const ang = -Math.PI / 2 + i * Math.PI / 3; ctx.lineTo(gx + 46 * Math.cos(ang), gy + 46 * Math.sin(ang)); } ctx.closePath();
+  ctx.fillStyle = color; ctx.fill();
+  ctx.fillStyle = c('--rf-on', '#0b0b0e'); ctx.font = `800 50px ${display}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(String(rating.cost), gx, gy + 3); ctx.textBaseline = 'alphabetic';
+  // type, centered under the art
+  let y = artY + artH + 40;
+  ctx.fillStyle = color; ctx.font = `700 22px ${body}`; ctx.fillText(TYPES[design.type].label.toUpperCase().split('').join(' '), cx, y);
   // name
-  ctx.textAlign = 'left'; ctx.fillStyle = ink; ctx.font = `800 30px ${display}`;
-  ctx.fillText(design.name, left, 30 + 140, right - left);
-  ctx.fillStyle = color; ctx.fillRect(left, 30 + 154, right - left, 3);
-  // text
+  y += 56; let nf = 46; ctx.fillStyle = ink;
+  do { ctx.font = `800 ${nf}px ${display}`; nf -= 2; } while (ctx.measureText(design.name).width > right - left && nf > 24);
+  ctx.fillText(design.name, cx, y);
+  ctx.fillStyle = color; ctx.fillRect(cx - 100, y + 14, 200, 3);
+  // rules text
   const t = renderCardText(design);
-  let y = 30 + 196;
-  ctx.font = `600 21px ${body}`; ctx.fillStyle = ink;
-  if (t.when) { ctx.fillStyle = color; ctx.font = `700 15px ${body}`; ctx.fillText('WHEN', left, y); ctx.fillStyle = ink; ctx.font = `600 21px ${body}`; y = wrap(ctx, t.when, left + 70, y, right - left - 70, 28); y += 6; }
-  for (const line of t.effects) y = wrap(ctx, line + '.', left, y, right - left, 28) + 4;
-  if (t.life) { ctx.fillStyle = color; ctx.font = `700 15px ${body}`; ctx.fillText('FOR', left, y); ctx.fillStyle = ink; ctx.font = `600 21px ${body}`; y = wrap(ctx, t.life + (t.once ? '. Once per turn' : ''), left + 70, y, right - left - 70, 28); }
-  ctx.font = `500 17px ${body}`; ctx.fillStyle = dim; y += 6;
-  for (const k of KEYWORD_ORDER.filter((x) => design.keywords.includes(x))) y = wrap(ctx, `${KEYWORDS[k].name}. ${KEYWORDS[k].text}`, left, y, right - left, 23);
-  if (t.price) y = wrap(ctx, t.price, left, y, right - left, 23);
+  ctx.textAlign = 'left'; y += 58;
+  ctx.font = `600 25px ${body}`; ctx.fillStyle = ink;
+  if (t.when) { ctx.fillStyle = color; ctx.font = `700 16px ${body}`; ctx.fillText('WHEN', left, y); ctx.fillStyle = ink; ctx.font = `600 25px ${body}`; y = wrap(ctx, t.when, left + 76, y, right - left - 76, 32); y += 6; }
+  for (const line of t.effects) y = wrap(ctx, line + '.', left, y, right - left, 32) + 4;
+  if (t.life) { ctx.fillStyle = color; ctx.font = `700 16px ${body}`; ctx.fillText('FOR', left, y); ctx.fillStyle = ink; ctx.font = `600 25px ${body}`; y = wrap(ctx, t.life + (t.once ? '. Once per turn' : ''), left + 76, y, right - left - 76, 32); }
+  ctx.font = `500 18px ${body}`; ctx.fillStyle = dim; y += 6;
+  for (const k of KEYWORD_ORDER.filter((x) => design.keywords.includes(x))) y = wrap(ctx, `${KEYWORDS[k].name}. ${KEYWORDS[k].text}`, left, y, right - left, 24);
+  if (t.price) y = wrap(ctx, t.price, left, y, right - left, 24);
   // footer
   const fy = 30 + 408 * 2 - 40;
   ctx.fillStyle = dim; ctx.font = `600 15px ${body}`; ctx.textAlign = 'left';

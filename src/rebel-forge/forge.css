@@ -266,3 +266,58 @@ body.light .rf-sweet{background:rgba(0,0,0,.12)}
 @media (prefers-reduced-motion:reduce){
   .rf-game *{animation:none!important;transition:none!important}
 }
+
+/* ---- card layout v3: art window up top, cost centered in its gem, type centered under the art, big name, larger rules text.
+   Everything is in cqw (card width) so it scales as one piece. Specificity (.rf-card .x) intentionally beats the older rules above. ---- */
+.rf-card .rf-in{padding:5.5% 7% 5%;gap:2.4cqw}
+.rf-card[data-type="defend"] .rf-in{padding-left:9%;padding-right:9%;padding-bottom:10%}
+.rf-card[data-type="instant"] .rf-in{padding-right:12%}
+.rf-card[data-type="attack"] .rf-in{padding-bottom:7.5%}
+.rf-card .rf-artw{position:relative;flex:none;height:33cqw}
+.rf-card .rf-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex:none;opacity:1;font-size:15cqw;color:var(--rf-c);overflow:hidden;
+  border:1.5px solid var(--rf-c);border-radius:3cqw;
+  background:radial-gradient(120% 100% at 30% 0%,color-mix(in srgb,var(--rf-c) 26%,transparent),color-mix(in srgb,var(--rf-c) 5%,transparent) 70%)}
+.rf-card .rf-art::before{content:"";position:absolute;inset:0;opacity:.5;pointer-events:none;
+  background:linear-gradient(color-mix(in srgb,var(--rf-c) 14%,transparent) 1px,transparent 1px) 0 0/100% 4.4cqw,linear-gradient(90deg,color-mix(in srgb,var(--rf-c) 14%,transparent) 1px,transparent 1px) 0 0/4.4cqw 100%}
+.rf-card .rf-art svg{position:relative;opacity:.4;stroke-width:1.2}
+.rf-card .rf-art.has-art .rf-artsvg{opacity:1;width:74%;height:82%;overflow:visible}
+.rf-artsvg .a-s{fill:none;stroke:currentColor;stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.rf-artsvg .a-g{fill:currentColor;fill-opacity:.22;stroke:none}
+.rf-artsvg .a-f{fill:currentColor;stroke:none}
+.rf-card .rf-gem{position:absolute;left:2cqw;top:2cqw;z-index:1;width:17cqw;height:17cqw;display:flex;align-items:center;justify-content:center;margin:0;
+  filter:drop-shadow(0 .6cqw 1.2cqw rgba(0,0,0,.35))}
+.rf-card .rf-cost{font:800 8.4cqw/1 var(--rf-display);display:block;text-align:center;transform:translateY(.15cqw)}
+.rf-card .rf-gem-l{display:none}
+.rf-card .rf-typebar{margin:.6cqw 0 0;display:flex;justify-content:center;align-items:center;gap:1.6cqw;font:700 4.2cqw/1 var(--rf-mono);letter-spacing:.2em}
+.rf-card .rf-ticon svg{font-size:4.8cqw}
+.rf-card .rf-name{display:block;text-align:center;border-bottom:0;padding:1.2cqw 0 2.4cqw;min-height:10.5cqw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 calc(10.6cqw * var(--ns,1))/1.05 var(--rf-display);letter-spacing:-.015em}
+.rf-card .rf-name::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:2px;background:var(--rf-c);opacity:.85}
+.rf-card .rf-bar{inset:0;justify-content:center;padding:0;font-size:3.2cqw}
+.rf-card .rf-body{gap:1.6cqw;font-size:6cqw;line-height:1.26}
+.rf-card .rf-ghost{font-size:5cqw}
+.rf-card .rf-row{gap:2cqw;padding:.4cqw 0}
+.rf-card .rf-rico svg{font-size:6.2cqw}
+.rf-card .rf-num{font-size:1.1em}
+.rf-card .rf-lbl{font-size:3.4cqw}
+.rf-card .rf-chain{padding:1.4cqw 2.4cqw;gap:2cqw;border-radius:2cqw}
+.rf-card .rf-once{font-size:3.2cqw}
+.rf-card .rf-join{height:4.4cqw;font-size:4.4cqw}
+.rf-card .rf-foot{font-size:4cqw;line-height:1.3}
+.rf-card .rf-mark{margin-top:1.2cqw;font-size:3cqw}
+.rf-card .rf-kws{display:block}
+.rf-card .rf-kw{margin-top:.4cqw}
+.rf-card .rf-stamp{right:-3cqw;top:-3.4cqw;border-width:1.4cqw;padding:.2cqw 2.6cqw .4cqw}
+.rf-card .rf-stamp-g{font-size:9cqw}
+.rf-card .rf-stamp-s{font-size:3.4cqw}
+@container rfcard (max-width: 270px){
+  .rf-card .rf-art{display:flex}
+  .rf-card .rf-kws{display:block}
+  .rf-card .rf-gem{width:17cqw;height:17cqw}
+  .rf-card .rf-cost{font-size:8.4cqw}
+  .rf-card .rf-body{font-size:6cqw;line-height:1.26}
+  .rf-card .rf-foot{font-size:3.7cqw}
+  .rf-card .rf-in{padding:5.5% 7% 5%;gap:2.4cqw}
+  .rf-card[data-type="defend"] .rf-in{padding-left:9%;padding-right:9%;padding-bottom:10%}
+  .rf-card[data-type="instant"] .rf-in{padding-right:12%}
+  .rf-card[data-type="attack"] .rf-in{padding-bottom:7.5%}
+}

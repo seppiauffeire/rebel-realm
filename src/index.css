@@ -229,7 +229,7 @@ body::before {
    Type colors (attack/defend/…) stay the game's own. ── */
 .rf-skin {
   --rf-card-w: clamp(190px, calc((100dvh - 340px) * 0.714), 290px);
-  --rf-card-w-sm: min(58vw, 220px);
+  --rf-card-w-sm: min(68vw, 250px);
   --rf-panel-min: clamp(300px, calc(100dvh - 330px), 500px);
 }
 .rf-skin .rf-game {
