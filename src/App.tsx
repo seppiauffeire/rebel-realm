@@ -321,22 +321,6 @@ function HeroSection() {
 }
 
 /* ══════════════════════════════════════════════════
-   Fallback placeholder image used when a project image
-   fails to load. Theme-aware so it matches whichever
-   mode is active.
-══════════════════════════════════════════════════ */
-const getPlaceholderFallback = (isLight: boolean) => {
-  const bg = isLight ? '#e2e1dc' : '#141414'
-  const fg = isLight ? '#E5484D' : '#4a4a4a'
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="336">
-      <rect width="240" height="336" fill="${bg}"/>
-      <text x="50%" y="50%" fill="${fg}" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">REBEL REALM</text>
-    </svg>`
-  )
-}
-
-/* ══════════════════════════════════════════════════
    ABOUT SECTION
 ══════════════════════════════════════════════════ */
 function AboutSection() {
@@ -396,7 +380,7 @@ const VALUES = [
 
 function ServicesSection() {
   return (
-    <section id="values" className="bg-white rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-6 sm:px-10 md:px-16 lg:px-20 py-20 sm:py-24 md:py-32">
+    <section id="values" className="bg-white [.light_&]:bg-[var(--bg)] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-6 sm:px-10 md:px-16 lg:px-20 py-20 sm:py-24 md:py-32">
       <FadeIn>
         <h2
           className="text-[#0C0C0C] font-black uppercase text-center"
@@ -442,12 +426,6 @@ type Project = {
   live?: string
 }
 
-const PLACEHOLDER_IMG = (label: string, w: number, h: number, isLight: boolean) => {
-  const bg = isLight ? 'e2e1dc' : '141414'
-  const fg = isLight ? 'E5484D' : '4a4a4a'
-  return `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(label)}&font=roboto`
-}
-
 const PROJECTS: Project[] = [
   { num: '01', category: 'Coming Soon', name: 'Secret Project 1' },
   { num: '02', category: 'Coming Soon', name: 'Secret Project 2' },
@@ -459,14 +437,7 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const targetScale = 1 - (total - 1 - index) * 0.03
   const scale = useTransform(scrollYProgress, [0, 1], [1, targetScale])
-  const { isLight } = useTheme()
-
-  const col1: [string, string] = [
-    PLACEHOLDER_IMG(project.name, 400, 230, isLight),
-    PLACEHOLDER_IMG(project.name, 400, 340, isLight),
-  ]
-  const col2 = PLACEHOLDER_IMG(project.name, 700, 600, isLight)
-  const fallback = getPlaceholderFallback(isLight)
+  const tile = 'w-full min-h-0 bg-[var(--placeholder-bg)] rounded-[40px] sm:rounded-[50px] md:rounded-[60px]'
 
   return (
     <div ref={ref} className="h-[85vh] max-h-[720px] sticky" style={{ top: `${96 + index * 28}px` }}>
@@ -496,37 +467,11 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
         {/* Image grid */}
         <div className="flex gap-3 flex-1 min-h-0">
           <div className="flex flex-col gap-3 min-h-0" style={{ width: '40%' }}>
-            <img
-              src={col1[0]}
-              alt=""
-              loading="lazy"
-              className="w-full min-h-0 object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
-              style={{ flex: '42 1 0' }}
-              onError={(e) => {
-                if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
-              }}
-            />
-            <img
-              src={col1[1]}
-              alt=""
-              loading="lazy"
-              className="w-full min-h-0 object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
-              style={{ flex: '58 1 0' }}
-              onError={(e) => {
-                if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
-              }}
-            />
+            <div className={tile} style={{ flex: '42 1 0' }} />
+            <div className={tile} style={{ flex: '58 1 0' }} />
           </div>
           <div className="min-h-0" style={{ width: '60%' }}>
-            <img
-              src={col2}
-              alt=""
-              loading="lazy"
-              className="w-full h-full object-cover rounded-[40px] sm:rounded-[50px] md:rounded-[60px]"
-              onError={(e) => {
-                if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
-              }}
-            />
+            <div className={`${tile} h-full`} />
           </div>
         </div>
       </motion.div>

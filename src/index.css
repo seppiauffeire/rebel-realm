@@ -33,13 +33,13 @@
   --border-strong: #131313;
   --border-soft: rgba(19, 19, 19, 0.18);
   --heading-grad-1: #131313;
-  --heading-grad-2: #E5484D;
+  --heading-grad-2: #131313;
   --accent: #E5484D;
   --mark-bg: #e6e5e0;
   --mark-filter: invert(1);
   --grain-opacity: 0.02;
   --placeholder-bg: #e2e1dc;
-  --placeholder-fg: #E5484D;
+  --placeholder-fg: #131313;
 }
 
 @layer base {
