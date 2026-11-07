@@ -225,9 +225,9 @@ body::before {
    controls, soft radii) so it reads as part of the page.
    Type colors (attack/defend/…) stay the game's own. ── */
 .rf-skin {
-  --rf-card-w: clamp(190px, calc((100dvh - 395px) * 0.714), 290px);
+  --rf-card-w: clamp(190px, calc((100dvh - 300px) * 0.714), 300px);
   --rf-card-w-sm: min(68vw, 250px);
-  --rf-panel-min: clamp(300px, calc(100dvh - 385px), 500px);
+  --rf-panel-min: clamp(300px, calc(100dvh - 290px), 520px);
 }
 .rf-skin .rf-game {
   --rf-display: 'Kanit', system-ui, sans-serif;
@@ -278,26 +278,45 @@ html.light .rf-skin .rf-game {
 /* Short laptop screens (1366x768): give nav + headline + tagline more of the budget. */
 @media (max-height: 820px) {
   .rf-skin {
-    --rf-card-w: clamp(170px, calc((100dvh - 445px) * 0.714), 260px);
-    --rf-panel-min: clamp(270px, calc(100dvh - 435px), 440px);
+    --rf-card-w: clamp(180px, calc((100dvh - 290px) * 0.714), 280px);
+    --rf-panel-min: clamp(280px, calc(100dvh - 280px), 480px);
   }
   .rf-skin .rf-game { padding: 0.75rem 1rem 0.9rem; }
 }
 
-/* ─── Hero title: "Welcome to the / Rebel Realm" ───── */
-.hero-title { margin-top: 1.25rem; will-change: transform; }
+/* ─── Hero title: WELCOME TO THE / REBEL REALM ───────
+   Screen 1 is only the nav and this title, as big as it can be. Sizes follow the width, capped by height so
+   the title never outgrows the screen on ultra-wide or very short windows. */
+.hero-title { will-change: transform, opacity; }
 .hero-title h1 {
   display: flex; flex-direction: column; align-items: center;
   font-weight: 900; text-transform: uppercase; line-height: 0.95; letter-spacing: -0.02em; white-space: nowrap;
 }
-.hero-welcome { font-size: clamp(1.1rem, 3.6vw, 3.6rem); letter-spacing: 0.14em; margin-bottom: 0.15em; }
-.hero-realm { font-size: clamp(3rem, 16vw, 17.5vw); }
-.hero-title.is-play { margin-top: 0.6rem; }
-.hero-title.is-play .hero-welcome { font-size: clamp(0.95rem, 2.4vw, 2.3rem); }
-.hero-title.is-play .hero-realm { font-size: clamp(2.2rem, 6.6vw, 5.8rem); }
-@media (max-height: 820px) {
-  .hero-welcome { font-size: clamp(1rem, 3vw, 2.6rem); }
-  .hero-realm { font-size: clamp(2rem, 9vw, 6rem); }
-  .hero-title.is-play .hero-welcome { font-size: clamp(0.9rem, 2vw, 1.8rem); }
-  .hero-title.is-play .hero-realm { font-size: clamp(2rem, 5.4vw, 4.6rem); }
+.hero-welcome { display: block; font-size: min(12.4vw, 21vh); }
+.hero-realm { display: block; font-size: min(16vw, 28vh); }
+.hero-welcome > span, .hero-realm > span { display: inline; }
+/* once the game is collapsed the classic hero also holds the logo mark + tagline, so the title gives up some height */
+.hero-title:not(.is-play) .hero-welcome { font-size: min(12.4vw, 17vh); }
+.hero-title:not(.is-play) .hero-realm { font-size: min(16vw, 23vh); }
+/* phones: stack the words so the title stays huge instead of tiny on one line */
+@media (max-width: 640px), (max-width: 1000px) and (orientation: portrait) {
+  .hero-title h1 { white-space: normal; }
+  .hero-welcome { font-size: min(15vw, 12vh); }
+  .hero-realm { font-size: min(25vw, 20vh); }
+  .hero-title:not(.is-play) .hero-welcome { font-size: min(15vw, 10vh); }
+  .hero-title:not(.is-play) .hero-realm { font-size: min(25vw, 16vh); }
+  .hero-welcome > span, .hero-realm > span { display: block; }
 }
+.hero-screen-play { height: 100dvh; min-height: 520px; }
+.hero-cue {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 1rem 1rem 1.75rem;
+  color: var(--text); opacity: 0.7; font-weight: 500; font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
+  transition: opacity 0.2s ease;
+}
+.hero-cue:hover { opacity: 1; }
+.hero-cue svg { animation: heroCue 1.6s ease-in-out infinite; }
+@keyframes heroCue { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .hero-cue svg { animation: none; } }
+.forge-stage { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 2.5rem 1rem 3rem; }
+@media (min-width: 640px) { .forge-stage { padding-left: 2rem; padding-right: 2rem; } }
+@media (min-width: 768px) { .forge-stage { padding-left: 3rem; padding-right: 3rem; } }

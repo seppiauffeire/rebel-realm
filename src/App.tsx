@@ -260,7 +260,7 @@ const NAV_LINKS = [
 /* Sealed = visible but ghosted and inert until the Forge game reveals it. */
 const sealCls = (open: boolean) => `rr-seal${open ? '' : ' rr-sealed'}`
 
-type Reveal = { nav: boolean; headline: boolean; tagline: boolean }
+type Reveal = { nav: boolean; tagline: boolean }
 
 function HeroSection() {
   // Decide synchronously so returning visitors / bots never see a flash of the game.
@@ -275,58 +275,119 @@ function HeroSection() {
       webdriver: navigator.webdriver === true,
     }).mode === 'play'
   })
-  const [rev, setRev] = useState<Reveal>({ nav: !playing, headline: !playing, tagline: !playing })
-  const openAll = () => setRev({ nav: true, headline: true, tagline: true })
+  const [rev, setRev] = useState<Reveal>({ nav: !playing, tagline: !playing })
+  const openAll = () => setRev({ nav: true, tagline: true })
   const { scrollY } = useScroll()
-  const titleScale = useTransform(scrollY, [0, 520], [1, 0.45])
+  // The title is the first thing seen at full size, then shrinks and dims as the visitor scrolls on to the game.
+  const titleScale = useTransform(scrollY, [0, 520], [1, 0.5])
+  const titleOpacity = useTransform(scrollY, [0, 520], [1, 0.25])
 
   const handleReveal = (stage: ForgeStage) => {
     if (stage === 'kind') setRev(r => ({ ...r, nav: true }))
-    else if (stage === 'effects') setRev(r => ({ ...r, headline: true }))
-    else setRev(r => ({ ...r, tagline: true }))
+    else if (stage === 'forge') setRev(r => ({ ...r, tagline: true }))
   }
 
   const linkCls = (open: boolean) =>
-    `text-[var(--text)] font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 ${sealCls(open)}`
+    `text-[var(--text)] font-medium uppercase tracking-wide sm:tracking-wider text-[0.7rem] sm:text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 ${sealCls(open)}`
+
+  const tagline = (
+    <p
+      className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
+      style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
+    >
+      We build games people are still arguing about years down the line.
+    </p>
+  )
 
   return (
-    <section
-      className={`${playing ? 'min-h-dvh' : 'h-dvh'} flex flex-col relative rf-skin`}
-      style={{ overflowX: 'clip' }}
-    >
-      {/* Navbar — the theme toggle is never sealed */}
-      <FadeIn delay={0} y={-20}>
-        <nav className="flex items-center justify-between px-8 sm:px-12 md:px-16 lg:px-20 pt-7 md:pt-9">
-          {NAV_LINKS.map(link => (
-            <a key={link.label} href={link.href} inert={!rev.nav} className={linkCls(rev.nav)}>
-              {link.label}
-            </a>
-          ))}
-          <span className={`text-[var(--text)]/50 font-medium uppercase tracking-wider text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none ${sealCls(rev.nav)}`}>
-            Secret Project
-          </span>
-          <ThemeToggle />
-        </nav>
-      </FadeIn>
+    <>
+      {/* Screen 1: the title, as big as it gets */}
+      <section
+        className={`${playing ? 'hero-screen-play' : 'h-dvh'} flex flex-col relative`}
+        style={{ overflowX: 'clip' }}
+      >
+        <FadeIn delay={0} y={-20}>
+          <nav className="flex items-center justify-between gap-2 px-5 sm:px-12 md:px-16 lg:px-20 pt-6 md:pt-9">
+            {NAV_LINKS.map(link => (
+              <a key={link.label} href={link.href} inert={!rev.nav} className={linkCls(rev.nav)}>
+                {link.label}
+              </a>
+            ))}
+            <span className={`text-[var(--text)]/50 font-medium uppercase tracking-wide sm:tracking-wider text-[0.7rem] sm:text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none ${sealCls(rev.nav)}`}>
+              Secret Project
+            </span>
+            <ThemeToggle />
+          </nav>
+        </FadeIn>
 
-      {/* Hero heading: two lines, big, and it shrinks as the visitor scrolls down */}
-      <FadeIn delay={0.15} y={30}>
-        <motion.div
-          className={`hero-title ${playing ? 'is-play' : ''} px-4 ${sealCls(rev.headline)}`}
-          style={{ scale: titleScale, transformOrigin: 'top center' }}
-          inert={!rev.headline}
-        >
-          <h1 className="hero-heading text-center">
-            <span className="hero-welcome">Welcome to the</span>
-            <span className="hero-realm">Rebel Realm</span>
-          </h1>
-        </motion.div>
-      </FadeIn>
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <FadeIn delay={0.15} y={40} className="w-full">
+            <motion.div
+              key={playing ? 'play' : 'classic'}
+              className={`hero-title ${playing ? 'is-play' : ''}`}
+              style={{ scale: playing ? titleScale : 1, opacity: playing ? titleOpacity : 1, transformOrigin: 'center top' }}
+            >
+              <h1 className="hero-heading text-center">
+                <span className="hero-welcome"><span>Welcome</span> <span>to the</span></span>
+                <span className="hero-realm"><span>Rebel</span> <span>Realm</span></span>
+              </h1>
+            </motion.div>
+          </FadeIn>
+        </div>
 
-      {/* Game, or the classic logo mark once it has collapsed */}
-      {playing ? (
-        <div className="flex-1 min-h-0 flex items-center justify-center px-4 sm:px-8 md:px-12 py-3 md:py-4">
-          <div className="w-full max-w-[1180px]">
+        {playing ? (
+          <a
+            href="#forge"
+            onClick={(e) => { e.preventDefault(); document.getElementById('forge')?.scrollIntoView({ behavior: 'smooth' }) }}
+            className="hero-cue self-center"
+            aria-label="Scroll down to play"
+          >
+            <span>Forge a card to enter</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </a>
+        ) : (
+          <>
+            <div className="flex-1 flex items-center justify-center relative min-h-0">
+              <div className="hero-mark-size aspect-square">
+                <Magnet padding={150} strength={3} className="w-full h-full">
+                  <div
+                    className="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
+                    style={{
+                      background: 'var(--mark-bg)',
+                      border: '1px solid var(--border-soft)',
+                      boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    {/* logo.png is a transparent/white-mark PNG over a solid backdrop; in light
+                        mode the backdrop flips and the mark inverts via CSS filter. Scaled past
+                        100% and clipped by the circle, since object-contain alone reads too small. */}
+                    <img
+                      src="/logo.png"
+                      alt="Rebel Realm"
+                      className="w-full h-full object-contain"
+                      style={{ transform: 'scale(1.6)', filter: 'var(--mark-filter)' }}
+                    />
+                  </div>
+                </Magnet>
+              </div>
+            </div>
+            <div className="pb-12 sm:pb-16 md:pb-20 px-8 sm:px-12 md:px-16 lg:px-20">
+              <FadeIn delay={0.35} y={20}>{tagline}</FadeIn>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Screen 2: the game, popping in as it arrives so the visitor can focus on it */}
+      {playing && (
+        <section id="forge" className="rf-skin forge-stage" style={{ overflowX: 'clip' }}>
+          <motion.div
+            className="w-full max-w-[1180px] mx-auto"
+            initial={{ opacity: 0, y: 60, scale: 0.94, filter: 'blur(10px)' }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          >
             <RebelForge
               brand="Rebel Realm"
               storageKey="rr_opened"
@@ -340,50 +401,11 @@ function HeroSection() {
                 }, 350)
               }}
             />
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center relative min-h-0">
-          <div className="hero-mark-size aspect-square">
-            <Magnet padding={150} strength={3} className="w-full h-full">
-              <div
-                className="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
-                style={{
-                  background: 'var(--mark-bg)',
-                  border: '1px solid var(--border-soft)',
-                  boxShadow: '0 0 80px rgba(137, 170, 204, 0.15), inset 0 0 60px rgba(0,0,0,0.25)',
-                }}
-              >
-                {/* logo.png is a transparent/white-mark PNG over a solid backdrop; in light
-                    mode the backdrop flips and the mark inverts via CSS filter. Scaled past
-                    100% and clipped by the circle, since object-contain alone reads too small. */}
-                <img
-                  src="/logo.png"
-                  alt="Rebel Realm"
-                  className="w-full h-full object-contain"
-                  style={{ transform: 'scale(1.6)', filter: 'var(--mark-filter)' }}
-                />
-              </div>
-            </Magnet>
-          </div>
-        </div>
+          </motion.div>
+          <div className={`mt-6 md:mt-8 px-4 ${sealCls(rev.tagline)}`} inert={!rev.tagline}>{tagline}</div>
+        </section>
       )}
-
-      {/* Bottom bar */}
-      <div
-        className={`${playing ? 'pb-6 md:pb-8' : 'pb-16 sm:pb-20 md:pb-24'} px-8 sm:px-12 md:px-16 lg:px-20 ${sealCls(rev.tagline)}`}
-        inert={!rev.tagline}
-      >
-        <FadeIn delay={0.35} y={20}>
-          <p
-            className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
-            style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
-          >
-            We build games people are still arguing about years down the line.
-          </p>
-        </FadeIn>
-      </div>
-    </section>
+    </>
   )
 }
 
