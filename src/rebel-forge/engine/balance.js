@@ -127,7 +127,7 @@ export const TYPE_ORDER = ['attack', 'defend', 'setup', 'instant', 'permanent'];
 export const INSTANT_FIT = ['block', 'doubleBlock', 'thorns', 'heal', 'stun', 'weaken', 'cancel'];
 
 // Rating knobs
-export const MAXES = { budget: 25, focus: 20, synergy: 20, depth: 15, originality: 20 };
+export const MAXES = { budget: 20, focus: 20, synergy: 20, depth: 20, originality: 20 };
 export const COST_NAMES = ['Free', 'Cheap', 'Light', 'Mid', 'Heavy', 'Huge'];
 export const RATING = {
   budgetFloor: 0.5,

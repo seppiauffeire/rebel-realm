@@ -80,8 +80,9 @@ export function loopRisk(design, cost) {
 
 // How far the player's chosen cost is from the fair one. Under-pricing is punished harder than over-pricing:
 // a strong card that is cheap and has no downside is the thing this game is about catching.
-const UNDER = [25, 9, 0];
-const OVER = [25, 18, 11, 5, 0];
+// Only the exact cost earns the maximum; every miss still scores, so a near miss feels like one.
+const UNDER = [20, 11, 6, 3, 1];
+const OVER = [20, 15, 10, 6, 3, 1];
 export function budgetScore(chosen, fair) {
   const diff = chosen - fair;
   return diff >= 0 ? OVER[Math.min(diff, OVER.length - 1)] : UNDER[Math.min(-diff, UNDER.length - 1)];
@@ -99,19 +100,19 @@ function budgetReason(chosen, fair, eff) {
 const SCALING = ['perEnemyCard', 'perCardPlayed', 'blockPerCard'];
 const PLANNING = ['keepCards', 'peek', 'recycle', 'tutor', 'copyLast', 'extraDrawNext', 'extraEnergyNext'];
 function depthDetail(design) {
-  let pts = 3;
+  let pts = 4;
   const why = [];
   const add = (n, text) => { pts += n; why.push(text); };
   const ids = design.effects.map((e) => e.id);
   const kws = design.keywords || [];
-  if (ids.some((i) => SCALING.includes(i))) add(4, 'it scales with the board');
-  if (ids.some((i) => EFFECTS[i].future || PLANNING.includes(i)) && design.type !== 'permanent') add(3, 'it is a plan for later');
-  if (design.type === 'instant') add(3, 'you choose when to play it');
-  if (design.type === 'permanent' && design.permanent && design.permanent.trigger && TRIGGERS[design.permanent.trigger].conditional) add(4, 'it reacts to the game');
-  if (kws.includes('chainBonus') || kws.includes('opener')) add(3, 'its timing matters');
-  if (kws.includes('keepInHand')) add(2, 'you decide when to cash it in');
-  if (kws.includes('singleUse')) add(2, 'you only get to use it once');
-  if (design.price) add(2, 'you decide if the price is worth it');
+  if (ids.some((i) => SCALING.includes(i))) add(5, 'it scales with the board');
+  if (ids.some((i) => EFFECTS[i].future || PLANNING.includes(i)) && design.type !== 'permanent') add(4, 'it is a plan for later');
+  if (design.type === 'instant') add(4, 'you choose when to play it');
+  if (design.type === 'permanent' && design.permanent && design.permanent.trigger && TRIGGERS[design.permanent.trigger].conditional) add(5, 'it reacts to the game');
+  if (kws.includes('chainBonus') || kws.includes('opener')) add(4, 'its timing matters');
+  if (kws.includes('keepInHand')) add(3, 'you decide when to cash it in');
+  if (kws.includes('singleUse')) add(3, 'you only get to use it once');
+  if (design.price) add(3, 'you decide if the price is worth it');
   return { depth: Math.min(MAXES.depth, pts), why };
 }
 

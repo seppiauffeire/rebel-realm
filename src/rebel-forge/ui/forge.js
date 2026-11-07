@@ -176,7 +176,7 @@ export function mount(root, opts = {}) {
   function renderResult(st, view) {
     const r = st.result;
     if (ui.forging) { panel.innerHTML = `<div class="rf-ph"><span class="rf-pstep">Forging</span><h2 class="rf-ptitle" tabindex="-1">Hold on</h2></div><div class="rf-pbody"><p class="rf-note">The card is heating up.</p></div>`; return; }
-    const costGain = 25 - r.parts.budget;
+    const costGain = MAXES.budget - r.parts.budget;
     const tip = r.chosen !== r.cost
       ? { gain: costGain, label: `Set the cost to ${r.cost} instead of ${r.chosen}` }
       : bestSingleStep(st.design);

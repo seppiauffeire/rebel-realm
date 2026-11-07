@@ -287,13 +287,13 @@ html.light .rf-skin .rf-game {
 /* ─── Hero title: WELCOME TO THE / REBEL REALM ───────
    Screen 1 is only the nav and this title, as big as it can be. Sizes follow the width, capped by height so
    the title never outgrows the screen on ultra-wide or very short windows. */
-.hero-title { will-change: transform, opacity; }
+.hero-title { will-change: transform, opacity; padding: 0 3vw; }
 .hero-title h1 {
   display: flex; flex-direction: column; align-items: center;
   font-weight: 900; text-transform: uppercase; line-height: 0.95; letter-spacing: -0.02em; white-space: nowrap;
 }
-.hero-welcome { display: block; font-size: min(12.4vw, 21vh); }
-.hero-realm { display: block; font-size: min(16vw, 28vh); }
+.hero-welcome { display: block; font-size: min(10.8vw, 21vh); }
+.hero-realm { display: block; font-size: min(13.6vw, 28vh); }
 .hero-welcome > span, .hero-realm > span { display: inline; }
 /* phones: stack the words so the title stays huge instead of tiny on one line */
 @media (max-width: 640px), (max-width: 1000px) and (orientation: portrait) {
