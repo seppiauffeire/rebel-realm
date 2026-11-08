@@ -1,12 +1,13 @@
 import {
-  useState, useRef, createContext, useContext, type ReactNode, type CSSProperties,
+  useState, useEffect, createContext, useContext, type ReactNode,
 } from 'react'
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import {
-  motion, AnimatePresence, useScroll, useTransform,
+  motion, AnimatePresence, MotionConfig, useScroll, useTransform, useReducedMotion,
 } from 'framer-motion'
 import RebelForge, { type ForgeStage } from './rebel-forge/react/RebelForge'
 import { decideMode } from './rebel-forge/host.js'
+import { encode } from './rebel-forge/engine/codec.js'
 
 /* ══════════════════════════════════════════════════
    THEME — light/dark toggle, same pattern as pmdispatch.com:
@@ -46,12 +47,13 @@ function ThemeProvider({ children }: { children: ReactNode }) {
 
 /* ── Theme Toggle Button — animated sun/moon crossfade ── */
 function ThemeToggle() {
-  const { toggle } = useTheme()
+  const { toggle, isLight } = useTheme()
   return (
     <button
       className="theme-btn"
       onClick={toggle}
-      aria-label="Toggle light/dark mode"
+      aria-label="Light mode"
+      aria-pressed={isLight}
       title="Toggle light/dark mode"
     >
       <svg className="theme-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -115,81 +117,22 @@ function FadeIn({
   )
 }
 
-/* ── AnimatedText: char-by-char scroll reveal ───── */
-function AnimatedText({
-  text, className = '', style,
-}: { text: string; className?: string; style?: CSSProperties }) {
-  const ref = useRef<HTMLParagraphElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start 0.8', 'end 0.2'],
-  })
-
-  const chars = text.split('')
-
-  return (
-    <p ref={ref} className={className} style={style}>
-      {chars.map((char, i) => {
-        const start = i / chars.length
-        const end = start + 1 / chars.length
-        return <Char key={i} char={char} progress={scrollYProgress} start={start} end={end} />
-      })}
-    </p>
-  )
-}
-
-function Char({
-  char, progress, start, end,
-}: {
-  char: string
-  progress: ReturnType<typeof useScroll>['scrollYProgress']
-  start: number
-  end: number
-}) {
-  const opacity = useTransform(progress, [start, end], [0.2, 1])
-  return (
-    <span style={{ position: 'relative' }}>
-      <span style={{ visibility: 'hidden' }}>{char}</span>
-      <motion.span style={{ position: 'absolute', left: 0, top: 0, opacity }}>
-        {char}
-      </motion.span>
-    </span>
-  )
-}
-
 /* ── Contact Button ──────────────────────────────── */
 function ContactButton({ className = '' }: { className?: string }) {
   return (
     <a
       href="mailto:hello@rebel-realm.com"
       className={`inline-flex items-center justify-center rounded-full text-white font-medium uppercase tracking-widest
-        px-8 py-3 sm:px-10 sm:py-3.5 md:px-12 md:py-4 text-xs sm:text-sm md:text-base
+        px-8 min-h-[48px] sm:px-10 md:px-12 text-sm md:text-base
         transition-all duration-200 cursor-pointer hover:brightness-110 active:scale-[0.97] ${className}`}
       style={{
-        background: 'linear-gradient(135deg, #4E85BF 0%, #89AACC 100%)',
-        boxShadow: '0 4px 20px rgba(78, 133, 191, 0.35)',
+        background: 'linear-gradient(135deg, #2B63A0 0%, #3A74B0 100%)',
+        boxShadow: '0 4px 20px rgba(43, 99, 160, 0.35)',
         border: '1px solid rgba(215, 226, 234, 0.3)',
       }}
     >
       Contact Us
     </a>
-  )
-}
-
-/* ── Live Project Button ─────────────────────────── */
-function LiveProjectButton({ to, className = '' }: { to?: string; className?: string }) {
-  const classes = `inline-flex items-center justify-center rounded-full border-2 border-[var(--border-strong)] text-[var(--text)] font-medium uppercase tracking-widest
-    px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base hover:bg-[var(--border-strong)]/10 active:scale-[0.97] transition-all duration-200 cursor-pointer whitespace-nowrap ${className}`
-  if (to) {
-    return <Link to={to} className={classes}>Live Project</Link>
-  }
-  return (
-    <span
-      className={`inline-flex items-center justify-center rounded-full border-2 border-[var(--border-strong)]/25 text-[var(--text)]/40 font-medium uppercase tracking-widest
-        px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base cursor-default select-none whitespace-nowrap ${className}`}
-    >
-      Coming Soon
-    </span>
   )
 }
 
@@ -225,6 +168,7 @@ function HeroSection() {
   })
   const [rev, setRev] = useState<Reveal>({ nav: !playing, tagline: !playing })
   const openAll = () => setRev({ nav: true, tagline: true })
+  const reduceMotion = useReducedMotion()
   const { scrollY } = useScroll()
   // The title is the first thing seen at full size, then shrinks and dims as the visitor scrolls on.
   const titleScale = useTransform(scrollY, [0, 520], [1, 0.5])
@@ -236,7 +180,7 @@ function HeroSection() {
   }
 
   const linkCls = (open: boolean) =>
-    `text-[var(--text)] font-medium uppercase tracking-wide sm:tracking-wider text-[0.7rem] sm:text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 ${sealCls(open)}`
+    `inline-flex items-center min-h-[44px] text-[var(--text)] font-medium uppercase tracking-wide sm:tracking-wider text-xs sm:text-sm md:text-lg lg:text-[1.4rem] hover:opacity-70 active:opacity-50 ${sealCls(open)}`
 
   return (
     <>
@@ -249,7 +193,7 @@ function HeroSection() {
                 {link.label}
               </a>
             ))}
-            <span className={`text-[var(--text)]/50 font-medium uppercase tracking-wide sm:tracking-wider text-[0.7rem] sm:text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none ${sealCls(rev.nav)}`}>
+            <span className={`text-[var(--muted)] font-medium uppercase tracking-wide sm:tracking-wider text-xs sm:text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none ${sealCls(rev.nav)}`}>
               Secret Project
             </span>
             <ThemeToggle />
@@ -260,7 +204,7 @@ function HeroSection() {
           <FadeIn delay={0.15} y={40} className="w-full">
             <motion.div
               className="hero-title"
-              style={{ scale: titleScale, opacity: titleOpacity, transformOrigin: 'center top' }}
+              style={reduceMotion ? undefined : { scale: titleScale, opacity: titleOpacity, transformOrigin: 'center top' }}
             >
               <h1 className="hero-heading text-center">
                 <span className="hero-welcome"><span>Welcome</span> <span>to the</span></span>
@@ -297,6 +241,7 @@ function HeroSection() {
               className="rf-host"
               onReveal={handleReveal}
               onRevealAll={openAll}
+              onForged={saveTrophy}
               onCollapse={(reason) => {
                 setPlaying(false)
                 // Skip and "Enter the site" both mean: take me into the page.
@@ -308,7 +253,7 @@ function HeroSection() {
         <div className={`${playing ? 'mt-6 md:mt-8' : ''} px-4 ${sealCls(rev.tagline)}`} inert={!rev.tagline}>
           <FadeIn y={20}>
             <p
-              className="text-[var(--text)]/80 font-light tracking-wide leading-snug w-full text-center"
+              className="text-[var(--text)] font-light tracking-wide leading-snug w-full text-center"
               style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
             >
               We build games people are still arguing about years down the line.
@@ -321,199 +266,317 @@ function HeroSection() {
 }
 
 /* ══════════════════════════════════════════════════
+   TROPHY — the card a visitor forged stays on the page.
+   The best-rated card is kept in localStorage and redrawn as a PNG.
+══════════════════════════════════════════════════ */
+const TROPHY_KEY = 'rr_trophy'
+type Trophy = { code: string; grade: string; total: number; name: string }
+
+const readTrophy = (): Trophy | null => {
+  try {
+    const v = window.localStorage.getItem(TROPHY_KEY)
+    return v ? (JSON.parse(v) as Trophy) : null
+  } catch {
+    return null
+  }
+}
+
+const saveTrophy = (design: { name: string }, rating: { grade: string; total: number }) => {
+  const prev = readTrophy()
+  if (prev && prev.total >= rating.total) return
+  try {
+    window.localStorage.setItem(
+      TROPHY_KEY,
+      JSON.stringify({ code: encode(design), grade: rating.grade, total: rating.total, name: design.name }),
+    )
+  } catch {
+    // storage unavailable: the card just will not stay
+  }
+  window.dispatchEvent(new Event('rr-trophy'))
+}
+
+function TrophySection() {
+  const [trophy, setTrophy] = useState<Trophy | null>(() => (typeof window === 'undefined' ? null : readTrophy()))
+  const [img, setImg] = useState<string | null>(null)
+  const [note, setNote] = useState('')
+
+  useEffect(() => {
+    const on = () => setTrophy(readTrophy())
+    window.addEventListener('rr-trophy', on)
+    return () => window.removeEventListener('rr-trophy', on)
+  }, [])
+
+  useEffect(() => {
+    if (!trophy) { setImg(null); return undefined }
+    let dead = false
+    ;(async () => {
+      const [{ decode }, { rate }, { createCard }, { cardCanvas }] = await Promise.all([
+        import('./rebel-forge/engine/codec.js'),
+        import('./rebel-forge/engine/rating.js'),
+        import('./rebel-forge/ui/card.js'),
+        import('./rebel-forge/ui/share.js'),
+      ])
+      const design = decode(trophy.code)
+      if (!design || dead) return
+      const rating = rate(design)
+      // cardCanvas reads live colour tokens, so the card is mounted off screen inside the skin first.
+      const host = document.createElement('div')
+      host.className = 'rf-skin'
+      host.style.cssText = 'position:fixed;left:-9999px;top:0;width:300px'
+      document.body.appendChild(host)
+      const card = createCard('Rebel Realm')
+      card.el.dataset.type = design.type
+      host.appendChild(card.el)
+      try {
+        const cv = cardCanvas(design, rating, card.el)
+        if (!dead) setImg(cv.toDataURL('image/png'))
+      } finally {
+        host.remove()
+      }
+    })().catch(() => { if (!dead) setImg(null) })
+    return () => { dead = true }
+  }, [trophy])
+
+  if (!trophy || !img) return null
+
+  const download = () => {
+    const a = document.createElement('a')
+    a.href = img
+    a.download = `rebel-realm-${trophy.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'card'}.png`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+  const challenge = async () => {
+    const link = `${window.location.origin}/?card=${trophy.code}`
+    try {
+      await navigator.clipboard.writeText(link)
+      setNote('Link copied. Anyone who opens it sees your card and scores it fresh.')
+    } catch {
+      setNote(link)
+    }
+  }
+
+  const btn = 'inline-flex items-center justify-center min-h-[44px] rounded-full border-2 border-[var(--border-strong)] px-6 text-sm font-medium uppercase tracking-widest text-[var(--text)] hover:bg-[var(--border-strong)]/10 active:scale-[0.97] transition-all duration-200 cursor-pointer'
+
+  return (
+    <section id="your-card" aria-labelledby="your-card-title" className="px-6 sm:px-10 md:px-16 lg:px-20 py-20 sm:py-24 md:py-32 border-t border-[var(--border-soft)]">
+      <div className="max-w-6xl mx-auto grid gap-10 md:gap-16 md:grid-cols-[auto_1fr] items-center justify-items-center md:justify-items-start">
+        <FadeIn y={40}>
+          <img
+            src={img}
+            alt={`Your forged card, ${trophy.name}, rated ${trophy.grade}`}
+            className="block w-[min(72vw,300px)] md:w-[clamp(240px,26vw,340px)] h-auto"
+            style={{ transform: 'rotate(-3deg)', filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.35))' }}
+          />
+        </FadeIn>
+        <FadeIn delay={0.1} className="text-center md:text-left">
+          <p className="eyebrow">Your card</p>
+          <h2
+            id="your-card-title"
+            className="text-[var(--text)] font-black uppercase leading-[0.95] mt-3"
+            style={{ fontSize: 'clamp(2.25rem, 6.5vw, 6rem)' }}
+          >
+            {trophy.name}
+          </h2>
+          <p className="text-[var(--muted)] mt-4 max-w-xl text-lg md:text-xl leading-snug mx-auto md:mx-0">
+            Rated {trophy.grade}, {trophy.total} out of 100. It stays here, so you can show it off or dare someone to beat it.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3 justify-center md:justify-start">
+            <button type="button" className={btn} onClick={download}>Download PNG</button>
+            <button type="button" className={btn} onClick={challenge}>Challenge a friend</button>
+            <a className={btn} href="/?rr=force">Forge another</a>
+          </div>
+          <p role="status" className="text-[var(--muted)] text-sm mt-4 min-h-[1.25rem] break-all">{note}</p>
+        </FadeIn>
+      </div>
+    </section>
+  )
+}
+
+/* ══════════════════════════════════════════════════
    ABOUT SECTION
 ══════════════════════════════════════════════════ */
 function AboutSection() {
   return (
-    <section id="about" className="min-h-dvh flex items-center justify-center relative px-5 sm:px-8 md:px-10 py-20 overflow-hidden">
-      {/* Ambient glow, echoes the hero mark's accent hue */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 40%, rgba(78, 133, 191, 0.08) 0%, transparent 55%)',
-        }}
-      />
-
-      <div className="flex flex-col items-center gap-10 sm:gap-14 md:gap-16 relative z-10">
-        <FadeIn delay={0} y={40}>
-          <h2
-            className="hero-heading font-black uppercase leading-none tracking-tight text-center"
-            style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-          >
-            About Us
-          </h2>
+    <section id="about" className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 md:py-44">
+      <div className="max-w-6xl mx-auto">
+        <FadeIn>
+          <p className="eyebrow">About</p>
         </FadeIn>
-
-        <div className="flex flex-col items-center gap-16 sm:gap-20 md:gap-24">
-          <AnimatedText
-            text="Rebel Realm is a studio building games, software and consulting on product and design. We're building games we're still proud of 10 years from now."
-            className="text-[var(--text)] font-medium text-center max-w-3xl"
-            style={{ fontSize: 'clamp(1.25rem, 2.6vw, 2.1rem)', lineHeight: 1.5 }}
-          />
-          <ContactButton />
-        </div>
+        <FadeIn delay={0.08}>
+          <p
+            className="text-[var(--text)] font-semibold tracking-tight mt-6 max-w-5xl"
+            style={{ fontSize: 'clamp(1.9rem, 5.2vw, 4.4rem)', lineHeight: 1.08 }}
+          >
+            We make games, card games above all, that people are still arguing about years later.
+          </p>
+        </FadeIn>
+        <FadeIn delay={0.16}>
+          <p
+            className="text-[var(--muted)] font-light mt-8 max-w-2xl"
+            style={{ fontSize: 'clamp(1.1rem, 1.8vw, 1.5rem)', lineHeight: 1.5 }}
+          >
+            Rebel Realm is a studio building games, software and design consulting. We only ship what we would still be proud of in ten years.
+          </p>
+        </FadeIn>
       </div>
     </section>
   )
 }
 
 /* ══════════════════════════════════════════════════
-   CORE VALUES SECTION
+   HOW WE BUILD — three principles
 ══════════════════════════════════════════════════ */
-const VALUES = [
-  {
-    num: '01',
-    name: 'Deep Mastery',
-    desc: 'Minutes to learn. Years to master.',
-  },
-  {
-    num: '02',
-    name: 'Player-Obsessed',
-    desc: 'Built with our community, not just for them.',
-  },
-  {
-    num: '03',
-    name: 'Creative Expression',
-    desc: 'Every system leaves room for your own style.',
-  },
+const PRINCIPLES = [
+  { num: '01', name: 'Easy in. Deep down.', desc: 'Minutes to learn. Years to master.' },
+  { num: '02', name: 'Built with players.', desc: 'Our community shapes every game we make.' },
+  { num: '03', name: 'Make it yours.', desc: 'Every system leaves room for your own style.' },
 ]
 
-function ServicesSection() {
+function PrinciplesSection() {
   return (
-    <section id="values" className="bg-white [.light_&]:bg-[var(--bg)] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] px-6 sm:px-10 md:px-16 lg:px-20 py-20 sm:py-24 md:py-32">
-      <FadeIn>
-        <h2
-          className="text-[#0C0C0C] font-black uppercase text-center"
-          style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-        >
-          Core Values
-        </h2>
-      </FadeIn>
-      <div className="w-full mt-16 sm:mt-20 md:mt-28">
-        {VALUES.map((s, i) => (
-          <FadeIn key={s.name} delay={i * 0.1}>
-            <div
-              className="py-10 sm:py-12 md:py-16"
-              style={{ borderBottom: '1px solid rgba(12, 12, 12, 0.15)' }}
-            >
-              <h3
-                className="font-black text-[#0C0C0C] uppercase leading-[0.95] mb-4 md:mb-6"
-                style={{ fontSize: 'clamp(2.25rem, 6.5vw, 6.5rem)' }}
-              >
-                {s.name}
-              </h3>
-              <p
-                className="text-[#0C0C0C] font-light leading-relaxed max-w-3xl"
-                style={{ fontSize: 'clamp(1rem, 1.8vw, 1.4rem)', opacity: 0.6 }}
-              >
-                {s.desc}
-              </p>
-            </div>
-          </FadeIn>
-        ))}
+    <section id="values" className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 md:py-40 border-t border-[var(--border-soft)]">
+      <div className="max-w-6xl mx-auto">
+        <FadeIn>
+          <p className="eyebrow">How we build</p>
+        </FadeIn>
+        <ol className="mt-10 sm:mt-14">
+          {PRINCIPLES.map((p, i) => (
+            <li key={p.name}>
+              <FadeIn delay={i * 0.08}>
+                <div
+                  className="grid gap-x-8 gap-y-3 md:grid-cols-[5rem_1fr] py-9 sm:py-12 md:py-14"
+                  style={{ borderBottom: i < PRINCIPLES.length - 1 ? '1px solid var(--border-soft)' : undefined }}
+                >
+                  <span className="text-[var(--muted)] font-medium text-lg md:text-xl tabular-nums md:pt-4">{p.num}</span>
+                  <div>
+                    <h3
+                      className="font-black text-[var(--text)] uppercase leading-[0.95]"
+                      style={{ fontSize: 'clamp(2.1rem, 6.2vw, 5.75rem)' }}
+                    >
+                      {p.name}
+                    </h3>
+                    <p
+                      className="text-[var(--muted)] font-light mt-4 md:mt-5 max-w-3xl"
+                      style={{ fontSize: 'clamp(1.05rem, 1.8vw, 1.5rem)', lineHeight: 1.45 }}
+                    >
+                      {p.desc}
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   )
 }
 
 /* ══════════════════════════════════════════════════
-   PROJECTS SECTION (sticky stacking cards)
+   IN THE WORKS — one project, kept under wraps
 ══════════════════════════════════════════════════ */
-type Project = {
-  num: string
-  category: string
-  name: string
-  live?: string
+function Redacted({ ch }: { ch: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block align-baseline bg-[var(--text)] rounded-[0.12em]"
+      style={{ width: `${ch}ch`, height: '0.78em', marginRight: '0.28em' }}
+    />
+  )
 }
 
-const PROJECTS: Project[] = [
-  { num: '01', category: 'Coming Soon', name: 'Secret Project 1' },
-  { num: '02', category: 'Coming Soon', name: 'Secret Project 2' },
-  { num: '03', category: 'Coming Soon', name: 'Secret Project 3' },
-]
-
-function ProjectCard({ project, index, total }: { project: Project; index: number; total: number }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const targetScale = 1 - (total - 1 - index) * 0.03
-  const scale = useTransform(scrollYProgress, [0, 1], [1, targetScale])
-  const tile = 'w-full min-h-0 bg-[var(--placeholder-bg)] rounded-[40px] sm:rounded-[50px] md:rounded-[60px]'
-
+function CardBack() {
   return (
-    <div ref={ref} className="h-[85vh] max-h-[720px] sticky" style={{ top: `${96 + index * 28}px` }}>
-      <motion.div
-        style={{ scale, transformOrigin: 'top center' }}
-        className="rounded-[40px] sm:rounded-[50px] md:rounded-[60px] border-2 border-[var(--border-strong)] bg-[var(--bg)] p-4 sm:p-6 md:p-8 h-full flex flex-col overflow-hidden"
-      >
-        {/* Top row */}
-        <div className="flex items-center justify-between gap-4 flex-wrap mb-4 md:mb-6">
-          <div className="flex items-center gap-4 md:gap-6">
-            <span
-              className="hero-heading font-black"
-              style={{ fontSize: 'clamp(2.5rem, 8vw, 100px)' }}
-            >
-              {project.num}
-            </span>
-            <div>
-              <p className="text-[var(--text)]/50 text-xs md:text-sm uppercase tracking-widest mb-1">{project.category}</p>
-              <h3 className="text-[var(--text)] font-medium uppercase" style={{ fontSize: 'clamp(1.1rem, 3vw, 2rem)' }}>
-                {project.name}
-              </h3>
-            </div>
-          </div>
-          <LiveProjectButton to={project.live} />
-        </div>
-
-        {/* Image grid */}
-        <div className="flex gap-3 flex-1 min-h-0">
-          <div className="flex flex-col gap-3 min-h-0" style={{ width: '40%' }}>
-            <div className={tile} style={{ flex: '42 1 0' }} />
-            <div className={tile} style={{ flex: '58 1 0' }} />
-          </div>
-          <div className="min-h-0" style={{ width: '60%' }}>
-            <div className={`${tile} h-full`} />
-          </div>
-        </div>
-      </motion.div>
-    </div>
+    <svg viewBox="0 0 300 420" className="block w-full h-auto" role="img" aria-label="A face-down card" style={{ transform: 'rotate(-4deg)' }}>
+      <rect x="4" y="4" width="292" height="412" rx="26" fill="var(--placeholder-bg)" stroke="var(--border-strong)" strokeWidth="4" />
+      <rect x="26" y="26" width="248" height="368" rx="14" fill="none" stroke="var(--border-strong)" strokeWidth="2" opacity="0.5" />
+      <g fill="none" stroke="var(--text)" strokeWidth="3" strokeLinejoin="round">
+        <path d="M150 96 L214 210 L150 324 L86 210 Z" />
+        <path d="M150 132 L190 210 L150 288 L110 210 Z" opacity="0.55" />
+      </g>
+      <circle cx="150" cy="210" r="9" fill="var(--text)" />
+    </svg>
   )
 }
 
 function ProjectsSection() {
   return (
-    <section
-      id="projects"
-      className="bg-[var(--bg)] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 md:-mt-14 relative z-10 px-6 sm:px-10 md:px-16 lg:px-20 pt-20 sm:pt-24 md:pt-32 pb-20"
-    >
-      <FadeIn>
-        <h2
-          className="hero-heading font-black uppercase text-center mb-16 sm:mb-20 md:mb-24"
-          style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-        >
-          Project
-        </h2>
-      </FadeIn>
-      <div className="w-full flex flex-col gap-8">
-        {PROJECTS.map((p, i) => (
-          <ProjectCard key={p.num} project={p} index={i} total={PROJECTS.length} />
-        ))}
+    <section id="projects" className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 md:py-40 border-t border-[var(--border-soft)]">
+      <div className="max-w-6xl mx-auto">
+        <FadeIn>
+          <p className="eyebrow">In the works</p>
+        </FadeIn>
+        <FadeIn delay={0.08} y={50}>
+          <article className="mt-10 sm:mt-14 rounded-[36px] sm:rounded-[48px] md:rounded-[60px] border-2 border-[var(--border-strong)] p-6 sm:p-10 md:p-14 grid gap-10 md:gap-16 md:grid-cols-[minmax(0,300px)_1fr] items-center">
+            <div className="w-[min(60vw,260px)] md:w-full mx-auto md:mx-0">
+              <CardBack />
+            </div>
+            <div>
+              <p className="eyebrow">Project 01 · Classified</p>
+              <h3
+                aria-label="Title withheld"
+                className="text-[var(--text)] font-black uppercase leading-[1.05] mt-4"
+                style={{ fontSize: 'clamp(2.25rem, 6.4vw, 5.5rem)' }}
+              >
+                <Redacted ch={5} />
+                <Redacted ch={3} />
+                <Redacted ch={6} />
+              </h3>
+              <p
+                className="text-[var(--text)] mt-6 max-w-xl"
+                style={{ fontSize: 'clamp(1.15rem, 2vw, 1.6rem)', lineHeight: 1.4 }}
+              >
+                A new card game. The rules are the secret, and we are not telling yet. Think of the Forge as the warm-up.
+              </p>
+              <p className="text-[var(--muted)] mt-4 text-base md:text-lg uppercase tracking-widest">Card game · In development</p>
+              <a
+                href="mailto:hello@rebel-realm.com?subject=Tell%20me%20first"
+                className="mt-8 inline-flex items-center justify-center min-h-[48px] rounded-full border-2 border-[var(--border-strong)] px-8 text-sm md:text-base font-medium uppercase tracking-widest text-[var(--text)] hover:bg-[var(--border-strong)]/10 active:scale-[0.97] transition-all duration-200"
+              >
+                Tell me first
+              </a>
+            </div>
+          </article>
+        </FadeIn>
       </div>
     </section>
   )
 }
 
 /* ══════════════════════════════════════════════════
-   FOOTER
+   CLOSING + FOOTER
 ══════════════════════════════════════════════════ */
+function ClosingSection() {
+  return (
+    <section className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 border-t border-[var(--border-soft)]">
+      <div className="max-w-6xl mx-auto flex flex-col items-start gap-8">
+        <FadeIn>
+          <h2
+            className="text-[var(--text)] font-black uppercase leading-[0.95]"
+            style={{ fontSize: 'clamp(2.25rem, 7vw, 6.5rem)' }}
+          >
+            Say hello.
+          </h2>
+        </FadeIn>
+        <FadeIn delay={0.1}>
+          <ContactButton />
+        </FadeIn>
+      </div>
+    </section>
+  )
+}
+
 function SiteFooter() {
   return (
-    <footer className="bg-[var(--bg)] px-6 sm:px-10 md:px-16 lg:px-20 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[var(--border-soft)]">
-      <span className="text-[var(--text)]/50 text-sm tracking-wide">
+    <footer className="px-6 sm:px-10 md:px-16 lg:px-20 py-10 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-[var(--border-soft)]">
+      <span className="text-[var(--muted)] text-sm tracking-wide">
         © {new Date().getFullYear()} Rebel Realm
       </span>
       <a
         href="mailto:hello@rebel-realm.com"
-        className="text-[var(--text)]/70 hover:text-[var(--text)] text-sm tracking-wide transition-colors duration-200"
+        className="inline-flex items-center min-h-[44px] text-[var(--text)] hover:opacity-70 text-sm tracking-wide transition-opacity duration-200"
       >
         hello@rebel-realm.com
       </a>
@@ -531,8 +594,10 @@ function HomePage() {
       <main id="main-content" className="bg-[var(--bg)]" style={{ overflowX: 'clip' }}>
         <HeroSection />
         <AboutSection />
-        <ServicesSection />
+        <TrophySection />
+        <PrinciplesSection />
         <ProjectsSection />
+        <ClosingSection />
       </main>
       <SiteFooter />
     </>
@@ -555,10 +620,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </ThemeProvider>
+    <MotionConfig reducedMotion="user">
+      <ThemeProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </ThemeProvider>
+    </MotionConfig>
   )
 }

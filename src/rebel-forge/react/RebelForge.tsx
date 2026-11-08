@@ -25,6 +25,8 @@ export interface RebelForgeProps {
   onCollapse?: (reason: CollapseReason) => void;
   /** The visitor pressed "Enter the site". */
   onEnter?: () => void;
+  /** A card was forged and rated. Receives the design and its rating, e.g. to keep it as a trophy. */
+  onForged?: (design: any, rating: any) => void;
   /** Analytics. Events: rf_start, rf_type_set, rf_effect_added, rf_trigger_set, rf_lifespan_set, rf_keyword_toggled,
    *  rf_price_set, rf_forged, rf_share, rf_download, rf_skip, rf_enter_site. No personal data, never the card name. */
   onEvent?: (name: string, props: Record<string, unknown>) => void;
@@ -50,6 +52,7 @@ export default function RebelForge(props: RebelForgeProps) {
       onRevealAll: () => latest.current.onRevealAll?.(),
       onCollapse: (r) => latest.current.onCollapse?.(r),
       onEnter: () => latest.current.onEnter?.(),
+      onForged: (d: any, r: any) => latest.current.onForged?.(d, r),
       onEvent: (n, p) => latest.current.onEvent?.(n, p),
     });
     ctrl.current = c;

@@ -15,6 +15,7 @@
   --bg: #0C0C0C;
   --text: #D7E2EA;
   --text-muted-op: 0.5;
+  --muted: color-mix(in srgb, var(--text) 72%, transparent);
   --border-strong: #D7E2EA;
   --border-soft: rgba(215, 226, 234, 0.15);
   --heading-grad-1: #646973;
@@ -119,23 +120,11 @@
    fixed-height hero section. Only the max-height media
    query kicks in for constrained viewports; tall/normal
    viewports keep the full vw-driven scale untouched. ── */
-.hero-heading-size {
-  font-size: clamp(3rem, 16vw, 17.5vw);
-}
 
-.hero-mark-size {
-  width: clamp(180px, 30vmin, 450px);
-}
 
 @media (max-height: 820px) {
-  .hero-heading-size {
-    font-size: clamp(2rem, 9vw, 6rem);
+  
   }
-
-  .hero-mark-size {
-    width: clamp(110px, 16vh, 260px);
-  }
-}
 
 /* ─── Theme toggle button ──────────────────────────
    Adapted from the same animated sun/moon pattern used
@@ -145,7 +134,8 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -162,7 +152,7 @@
 .theme-svg {
   overflow: visible;
   display: block;
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
 }
 :root:not(.light) .theme-svg { transform: rotate(270deg); }
 :root.light .theme-svg { transform: rotate(0deg); }
@@ -171,7 +161,7 @@
   transform-origin: 12px 12px;
   transition-property: opacity, transform;
   transition-duration: 0.45s;
-  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
 }
 :root.light .th-sun { opacity: 1; transform: scale(1) rotate(0deg); }
 :root:not(.light) .th-sun { opacity: 0; transform: scale(0.3) rotate(-45deg); }
@@ -190,12 +180,6 @@ body::before {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
-/* ─── Marquee ───────────────────────────────────── */
-.marquee-track {
-  display: flex;
-  white-space: nowrap;
-  will-change: transform;
-}
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -318,3 +302,31 @@ html.light .rf-skin .rf-game {
 @media (min-width: 768px) { .forge-stage { padding-left: 3rem; padding-right: 3rem; } }
 /* once the game is gone (returning visitor, skipped) the stage is just the tagline under the title */
 .forge-stage.is-idle { min-height: 0; padding-top: 0.5rem; padding-bottom: 4rem; }
+
+/* Small uppercase section label */
+.eyebrow {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Gradient text needs a real colour when the OS forces its own palette */
+@media (forced-colors: active) {
+  .hero-heading {
+    background: none;
+    -webkit-text-fill-color: CanvasText;
+    color: CanvasText;
+  }
+}
+
+/* Reduced motion: no smooth scrolling, no decorative transitions */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -46,6 +46,15 @@ export function mount(root, opts = {}) {
         </div>
         <div class="rf-right"><div class="rf-panel"></div></div>
       </div>
+      <div class="rf-intro" role="dialog" aria-modal="true" aria-labelledby="rf-in-t"${opts.initialCard ? ' hidden' : ''}>
+        <div class="rf-in-box">
+          <p class="rf-in-eye">${esc(opts.brand || 'Rebel Realm')} Forge</p>
+          <h2 id="rf-in-t">Design the best card you can. Get rated.</h2>
+          <p class="rf-in-lead">Pick a type, add rules, set a cost. We score it out of 100 on budget, focus, synergy, depth and originality.</p>
+          <p class="rf-in-sub">We make card games, and balance is what we obsess over. This is a two-minute taste of how we think.</p>
+          <div class="rf-in-btns"><button type="button" class="rf-btn" data-act="begin">Start forging</button><button type="button" class="rf-link" data-act="intro-skip">Skip to the site</button></div>
+        </div>
+      </div>
       <div class="rf-live" aria-live="polite" aria-atomic="true"></div>
       <div class="rf-toast" role="status" hidden></div>
       <div class="rf-confirm" role="dialog" aria-modal="true" aria-labelledby="rf-cf-t" hidden>
@@ -294,6 +303,7 @@ export function mount(root, opts = {}) {
         else if (r.total >= 75) sound.chord();
         else if (r.total < 20) sound.sad();
         const h = $(panel, '.rf-ptitle'); if (h) h.focus({ preventScroll: true });
+        if (opts.onForged) opts.onForged(st.design, r);
       }
     });
     track('rf_forged', { type: st.design.type, score: r.total, grade: r.grade, cost: st.design.cost, fair_cost: r.cost, effects_count: st.design.effects.length });
@@ -344,6 +354,8 @@ export function mount(root, opts = {}) {
       sound.click();
     },
     sound: (b) => { const on = sound.toggle(); b.setAttribute('aria-pressed', on); $(b, 'span').textContent = on ? 'Sound on' : 'Sound off'; b.querySelector('svg').outerHTML = on ? UI_ICON.sound : UI_ICON.mute; },
+    begin: () => { const i = $(g, '.rf-intro'); i.hidden = true; track('rf_intro_start'); const t = $(g, '.rf-tile'); if (t) t.focus({ preventScroll: true }); },
+    'intro-skip': () => { track('rf_skip', { step: 'intro' }); if (opts.onSkip) opts.onSkip(); },
     skip: () => openConfirm(true),
     keep: () => openConfirm(false),
     'confirm-skip': () => { track('rf_skip', { step: store.get().step }); openConfirm(false); if (opts.onSkip) opts.onSkip(); },
@@ -428,6 +440,7 @@ export function mount(root, opts = {}) {
 
   function globalKey(e) {
     if (!root.isConnected || !root.offsetParent) return;
+    const intro = $(g, '.rf-intro'); if (intro && !intro.hidden) { if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); actions.begin(); } return; }
     const tag = (e.target && e.target.tagName) || '';
     const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
     const st = store.get();

@@ -10,6 +10,7 @@ export interface MountOptions {
   theme?: 'light' | 'dark';
   onEvent?: (name: string, props: Record<string, unknown>) => void;
   onReveal?: (stage: ForgeStage) => void;
+  onForged?: (design: any, rating: any) => void;
   onSkip?: () => void;
   onEnter?: () => void;
 }

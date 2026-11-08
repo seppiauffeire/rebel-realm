@@ -30,6 +30,7 @@ export interface BootOptions {
   theme?: 'light' | 'dark';
   onEvent?: (name: string, props: Record<string, unknown>) => void;
   onReveal?: (stage: ForgeStage) => void;
+  onForged?: (design: any, rating: any) => void;
   onRevealAll?: () => void;
   onCollapse?: (reason: CollapseReason) => void;
   onEnter?: () => void;

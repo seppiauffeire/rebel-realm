@@ -68,6 +68,7 @@ export function bootForge(o) {
         theme: o.theme,
         onEvent: o.onEvent,
         onReveal: o.onReveal,
+        onForged: o.onForged,
         onSkip: () => { remember(); collapse('skip'); },
         onEnter: () => { remember(); collapse('enter'); if (o.onEnter) o.onEnter(); },
       });
