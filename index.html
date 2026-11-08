@@ -27,6 +27,12 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Netlify Forms reads this at deploy time; the React form in App.tsx posts to it -->
+    <form name="tell-me-first" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="tell-me-first" />
+      <input name="bot-field" />
+      <input type="email" name="email" />
+    </form>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

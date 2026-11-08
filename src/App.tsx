@@ -1,5 +1,5 @@
 import {
-  useState, useEffect, createContext, useContext, type ReactNode,
+  useState, useEffect, createContext, useContext, type ReactNode, type FormEvent,
 } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import {
@@ -490,6 +490,78 @@ function CardBack() {
   )
 }
 
+/* ══════════════════════════════════════════════════
+   NOTIFY FORM — email sign-up for the first announcement.
+   Netlify Forms collects it: the matching static form lives in index.html
+   so Netlify can see it at deploy time, and this one posts to it.
+══════════════════════════════════════════════════ */
+type FormState = 'idle' | 'sending' | 'done' | 'error'
+
+function NotifyForm() {
+  const [state, setState] = useState<FormState>('idle')
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const data = new FormData(e.currentTarget)
+    setState('sending')
+    try {
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(data as unknown as Record<string, string>).toString(),
+      })
+      setState(res.ok ? 'done' : 'error')
+    } catch {
+      setState('error')
+    }
+  }
+
+  if (state === 'done') {
+    return (
+      <p role="status" className="mt-8 text-[var(--text)] text-xl md:text-2xl font-semibold">
+        You are on the list
+      </p>
+    )
+  }
+
+  return (
+    <form name="tell-me-first" method="POST" onSubmit={submit} className="mt-8 max-w-xl">
+      <input type="hidden" name="form-name" value="tell-me-first" />
+      <p className="hidden">
+        <label>Leave this empty <input name="bot-field" tabIndex={-1} autoComplete="off" /></label>
+      </p>
+      <label htmlFor="notify-email" className="eyebrow block mb-3">Your email</label>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          id="notify-email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          inputMode="email"
+          placeholder="you@example.com"
+          className="flex-1 min-w-0 min-h-[48px] border-2 border-[var(--border-strong)] bg-transparent px-4 text-base text-[var(--text)] placeholder:text-[var(--muted)]"
+        />
+        <button
+          type="submit"
+          disabled={state === 'sending'}
+          className="inline-flex items-center justify-center min-h-[48px] rounded-full border-2 border-[var(--border-strong)] px-8 text-sm md:text-base font-medium uppercase tracking-widest text-[var(--text)] hover:bg-[var(--border-strong)]/10 active:scale-[0.97] disabled:opacity-60 transition-all duration-200 cursor-pointer"
+        >
+          {state === 'sending' ? 'Sending' : 'Tell me first'}
+        </button>
+      </div>
+      <p className="text-[var(--muted)] text-sm mt-3">One email when we announce it, nothing else</p>
+      {state === 'error' && (
+        <p role="alert" className="text-[var(--text)] text-sm mt-3">
+          That did not go through. Email us at{' '}
+          <a className="underline underline-offset-4" href="mailto:hello@rebel-realm.com?subject=Tell%20me%20first">hello@rebel-realm.com</a>
+          {' '}instead
+        </p>
+      )}
+    </form>
+  )
+}
+
 function ProjectsSection() {
   return (
     <section id="projects" className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 md:py-40 border-t border-[var(--border-soft)]">
@@ -520,12 +592,7 @@ function ProjectsSection() {
                 A new card game with secret rules we are not ready to share, so think of the Forge as the warm‑up
               </p>
               <p className="text-[var(--muted)] mt-4 text-base md:text-lg uppercase tracking-widest">Card game · In development</p>
-              <a
-                href="mailto:hello@rebel-realm.com?subject=Tell%20me%20first"
-                className="mt-8 inline-flex items-center justify-center min-h-[48px] rounded-full border-2 border-[var(--border-strong)] px-8 text-sm md:text-base font-medium uppercase tracking-widest text-[var(--text)] hover:bg-[var(--border-strong)]/10 active:scale-[0.97] transition-all duration-200"
-              >
-                Tell me first
-              </a>
+              <NotifyForm />
             </div>
           </article>
         </FadeIn>
