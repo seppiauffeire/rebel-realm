@@ -350,4 +350,5 @@ body.light .rf-sweet{background:rgba(0,0,0,.12)}
 .rf-in-box h2{margin:0;font:900 clamp(1.8rem,4.6vw,3rem)/1.02 var(--rf-display);text-transform:uppercase;letter-spacing:-.01em}
 .rf-in-lead{margin:0;font-size:1.05rem;line-height:1.5}
 .rf-in-sub{margin:0;font-size:.92rem;line-height:1.5;color:var(--rf-dim)}
+.rf-in-btns .rf-link{text-transform:uppercase;letter-spacing:.14em}
 .rf-in-btns{display:flex;flex-direction:column;align-items:center;gap:.4rem;margin-top:.4rem}

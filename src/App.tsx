@@ -121,9 +121,9 @@ function FadeIn({
    HERO SECTION
 ══════════════════════════════════════════════════ */
 const NAV_LINKS = [
-  { label: 'About', href: '#about' },
-  { label: 'Principles', href: '#values' },
-  { label: 'Projects', href: '#projects' },
+  { label: 'Who', href: '#about' },
+  { label: 'How', href: '#values' },
+  { label: 'What', href: '#projects' },
 ]
 
 /* Sealed = visible but ghosted and inert until the Forge game reveals it. */
@@ -245,7 +245,7 @@ function HeroSection() {
               className="text-[var(--text)] font-light tracking-wide leading-snug w-full text-center"
               style={{ fontSize: 'clamp(1rem, 2.4vw, 2rem)' }}
             >
-              We build games people are still arguing about years down the line.
+              We build games people are still arguing about years down the line
             </p>
           </FadeIn>
         </div>
@@ -340,7 +340,7 @@ function TrophySection() {
     const link = `${window.location.origin}/?card=${trophy.code}`
     try {
       await navigator.clipboard.writeText(link)
-      setNote('Link copied. Anyone who opens it sees your card and scores it fresh.')
+      setNote('Link copied, anyone who opens it sees your card and scores it fresh')
     } catch {
       setNote(link)
     }
@@ -369,7 +369,7 @@ function TrophySection() {
             {trophy.name}
           </h2>
           <p className="text-[var(--muted)] mt-4 max-w-xl text-lg md:text-xl leading-snug mx-auto md:mx-0">
-            Rated {trophy.grade}, {trophy.total} out of 100. It stays here, so you can show it off or dare someone to beat it.
+            Rated {trophy.grade}, {trophy.total} out of 100, and it stays here so you can show it off or dare someone to beat it
           </p>
           <div className="mt-8 flex flex-wrap gap-3 justify-center md:justify-start">
             <button type="button" className={btn} onClick={download}>Download PNG</button>
@@ -398,7 +398,7 @@ function AboutSection() {
             className="text-[var(--text)] font-semibold tracking-tight mt-6 max-w-5xl"
             style={{ fontSize: 'clamp(1.9rem, 5.2vw, 4.4rem)', lineHeight: 1.08, textWrap: 'balance' }}
           >
-            Rebel Realm is a studio building games, software and design consulting.
+            Rebel Realm is a studio building games, software and design consulting
           </p>
         </FadeIn>
         <FadeIn delay={0.16}>
@@ -406,7 +406,7 @@ function AboutSection() {
             className="text-[var(--muted)] font-light mt-8 max-w-2xl"
             style={{ fontSize: 'clamp(1.1rem, 1.8vw, 1.5rem)', lineHeight: 1.5, textWrap: 'pretty' }}
           >
-            Card games are where we go deepest. Everything we make has to hold up in ten years.
+            Card games are where we go deepest, and everything we make has to hold up in ten years
           </p>
         </FadeIn>
       </div>
@@ -418,9 +418,9 @@ function AboutSection() {
    HOW WE BUILD — three principles
 ══════════════════════════════════════════════════ */
 const PRINCIPLES = [
-  { num: '01', name: 'Easy in. Deep down.', desc: 'Minutes to learn. Years to master.' },
-  { num: '02', name: 'Built with players.', desc: 'Our community shapes every game we make.' },
-  { num: '03', name: 'Make it yours.', desc: 'Every system leaves room for your own style.' },
+  { num: '01', name: 'Easy in, deep down', desc: 'Minutes to learn, years to master' },
+  { num: '02', name: 'Built with players', desc: 'Our community shapes every game we make' },
+  { num: '03', name: 'Make it yours', desc: 'Every system leaves room for your own style' },
 ]
 
 function PrinciplesSection() {
@@ -517,7 +517,7 @@ function ProjectsSection() {
                 className="text-[var(--text)] mt-6 max-w-xl"
                 style={{ fontSize: 'clamp(1.15rem, 2vw, 1.6rem)', lineHeight: 1.4 }}
               >
-                A new card game. The rules are the secret, and we are not telling yet. Think of the Forge as the warm-up.
+                A new card game with secret rules we are not ready to share, so think of the Forge as the warm-up
               </p>
               <p className="text-[var(--muted)] mt-4 text-base md:text-lg uppercase tracking-widest">Card game · In development</p>
               <a
@@ -568,11 +568,6 @@ function ClosingSection() {
               <path d="M7 17L17 7M8 7h9v9" />
             </svg>
           </a>
-        </FadeIn>
-        <FadeIn delay={0.16}>
-          <p className="text-[var(--muted)] font-light mt-6 text-lg md:text-xl">
-            Players, press, partners. Write to us.
-          </p>
         </FadeIn>
       </div>
     </section>
