@@ -407,17 +407,17 @@ function AboutSection() {
         <FadeIn delay={0.08}>
           <p
             className="text-[var(--text)] font-semibold tracking-tight mt-6 max-w-5xl"
-            style={{ fontSize: 'clamp(1.9rem, 5.2vw, 4.4rem)', lineHeight: 1.08 }}
+            style={{ fontSize: 'clamp(1.9rem, 5.2vw, 4.4rem)', lineHeight: 1.08, textWrap: 'balance' }}
           >
-            We make games, card games above all, that people are still arguing about years later.
+            Rebel Realm is a studio building games, software and design consulting.
           </p>
         </FadeIn>
         <FadeIn delay={0.16}>
           <p
             className="text-[var(--muted)] font-light mt-8 max-w-2xl"
-            style={{ fontSize: 'clamp(1.1rem, 1.8vw, 1.5rem)', lineHeight: 1.5 }}
+            style={{ fontSize: 'clamp(1.1rem, 1.8vw, 1.5rem)', lineHeight: 1.5, textWrap: 'pretty' }}
           >
-            Rebel Realm is a studio building games, software and design consulting. We only ship what we would still be proud of in ten years.
+            Card games are where we go deepest. Everything we make has to hold up in ten years.
           </p>
         </FadeIn>
       </div>
