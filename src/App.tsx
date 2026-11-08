@@ -148,6 +148,7 @@ function HeroSection() {
     }).mode === 'play'
   })
   const [forced, setForced] = useState(false)
+  const trophy = readTrophy()
   const [rev, setRev] = useState<Reveal>({ nav: !playing, tagline: !playing })
   // The nav link brings the game back after a skip, even for a returning visitor.
   const openForge = (e: { preventDefault: () => void }) => {
@@ -249,6 +250,21 @@ function HeroSection() {
             </p>
           </FadeIn>
         </div>
+        {!playing && (
+          <FadeIn y={20} className="mt-12 md:mt-16 px-4 flex flex-col items-center text-center gap-5">
+            <p className="eyebrow">The Forge</p>
+            <p className="text-[var(--text)] font-semibold tracking-tight" style={{ fontSize: 'clamp(1.4rem, 3.4vw, 2.6rem)', lineHeight: 1.1 }}>
+              {trophy ? `Your best is ${trophy.grade}, can you beat it` : 'Design the best card you can'}
+            </p>
+            <a
+              href="#forge"
+              onClick={openForge}
+              className="inline-flex items-center justify-center min-h-[48px] rounded-full border-2 border-[var(--border-strong)] px-8 text-sm md:text-base font-medium uppercase tracking-widest text-[var(--text)] hover:bg-[var(--border-strong)]/10 active:scale-[0.97] transition-all duration-200"
+            >
+              {trophy ? 'Forge again' : 'Play the Forge'}
+            </a>
+          </FadeIn>
+        )}
       </section>
     </>
   )
