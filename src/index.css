@@ -248,11 +248,11 @@ html.light .rf-skin .rf-game {
 .rf-skin .rf-tb, .rf-skin .rf-btn, .rf-skin .rf-ftab, .rf-skin .rf-link { border-radius: 999px; }
 .rf-skin .rf-btn { padding-left: 1.4rem; padding-right: 1.4rem; }
 .rf-skin .rf-tile, .rf-skin .rf-chip, .rf-skin .rf-opt, .rf-skin .rf-selrow,
-.rf-skin .rf-input, .rf-skin .rf-pamt, .rf-skin .rf-chain { border-radius: 16px; }
-.rf-skin .rf-tip { border-radius: 0 14px 14px 0; }
+.rf-skin .rf-input, .rf-skin .rf-pamt, .rf-skin .rf-ctile { border-radius: 0; }
+.rf-skin .rf-tip { border-radius: 0; }
 .rf-skin .rf-sb { border-radius: 50%; }
 .rf-skin .rf-dot, .rf-skin .rf-track, .rf-skin .rf-fill, .rf-skin .rf-sbar, .rf-skin .rf-sbar i { border-radius: 999px; }
-.rf-skin .rf-sc-g { border-radius: 14px; }
+.rf-skin .rf-sc-g { border-radius: 0; }
 .rf-skin .rf-cf-box { border-radius: 0; }
 .rf-skin .rf-confirm { border-radius: inherit; }
 .rf-skin .rf-toast { border-radius: 999px; }
