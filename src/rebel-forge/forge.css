@@ -352,3 +352,5 @@ body.light .rf-sweet{background:rgba(0,0,0,.12)}
 .rf-in-sub{margin:0;font-size:.92rem;line-height:1.5;color:var(--rf-dim)}
 .rf-in-btns .rf-link{text-transform:uppercase;letter-spacing:.14em}
 .rf-in-btns{display:flex;flex-direction:column;align-items:center;gap:.4rem;margin-top:.4rem}
+
+.rf-in-box h2{text-wrap:balance}

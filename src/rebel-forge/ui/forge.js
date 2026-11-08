@@ -49,7 +49,7 @@ export function mount(root, opts = {}) {
       <div class="rf-intro" role="dialog" aria-modal="true" aria-labelledby="rf-in-t"${opts.initialCard ? ' hidden' : ''}>
         <div class="rf-in-box">
           <p class="rf-in-eye">${esc(opts.brand || 'Rebel Realm')} Forge</p>
-          <h2 id="rf-in-t">Design the best card you can, get rated</h2>
+          <h2 id="rf-in-t">Design the best card you can<br>Get rated</h2>
           <p class="rf-in-lead">Pick a type, add rules, set a cost, then we score it out of 100 on budget, focus, synergy, depth and originality</p>
           <p class="rf-in-sub">We make card games and balance is what we obsess over, so this is a two-minute taste of how we think</p>
           <div class="rf-in-btns"><button type="button" class="rf-btn" data-act="begin">Start forging</button><button type="button" class="rf-link" data-act="intro-skip">Skip to the site</button></div>
