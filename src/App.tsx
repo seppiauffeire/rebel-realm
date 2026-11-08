@@ -253,7 +253,7 @@ function HeroSection() {
         {!playing && (
           <FadeIn y={20} className="mt-12 md:mt-16 px-4 flex flex-col items-center text-center gap-5">
             <p className="eyebrow">The Forge</p>
-            <p className="text-[var(--text)] font-semibold tracking-tight" style={{ fontSize: 'clamp(1.4rem, 3.4vw, 2.6rem)', lineHeight: 1.1 }}>
+            <p className="text-[var(--text)] font-black uppercase tracking-tight" style={{ fontSize: 'clamp(1.4rem, 3.4vw, 2.6rem)', lineHeight: 1.1 }}>
               {trophy ? `Your best is ${trophy.grade}, can you beat it` : 'Design the best card you can'}
             </p>
             <a
