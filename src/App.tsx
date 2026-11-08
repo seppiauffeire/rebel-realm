@@ -117,31 +117,12 @@ function FadeIn({
   )
 }
 
-/* ── Contact Button ──────────────────────────────── */
-function ContactButton({ className = '' }: { className?: string }) {
-  return (
-    <a
-      href="mailto:hello@rebel-realm.com"
-      className={`inline-flex items-center justify-center rounded-full text-white font-medium uppercase tracking-widest
-        px-8 min-h-[48px] sm:px-10 md:px-12 text-sm md:text-base
-        transition-all duration-200 cursor-pointer hover:brightness-110 active:scale-[0.97] ${className}`}
-      style={{
-        background: 'linear-gradient(135deg, #2B63A0 0%, #3A74B0 100%)',
-        boxShadow: '0 4px 20px rgba(43, 99, 160, 0.35)',
-        border: '1px solid rgba(215, 226, 234, 0.3)',
-      }}
-    >
-      Contact Us
-    </a>
-  )
-}
-
 /* ══════════════════════════════════════════════════
    HERO SECTION
 ══════════════════════════════════════════════════ */
 const NAV_LINKS = [
   { label: 'About', href: '#about' },
-  { label: 'Values', href: '#values' },
+  { label: 'Principles', href: '#values' },
   { label: 'Projects', href: '#projects' },
 ]
 
@@ -166,7 +147,14 @@ function HeroSection() {
       webdriver: navigator.webdriver === true,
     }).mode === 'play'
   })
+  const [forced, setForced] = useState(false)
   const [rev, setRev] = useState<Reveal>({ nav: !playing, tagline: !playing })
+  // The nav link brings the game back after a skip, even for a returning visitor.
+  const openForge = (e: { preventDefault: () => void }) => {
+    e.preventDefault()
+    if (!playing) { setForced(true); setPlaying(true) }
+    goTo('forge', playing ? 0 : 80)
+  }
   const openAll = () => setRev({ nav: true, tagline: true })
   const reduceMotion = useReducedMotion()
   const { scrollY } = useScroll()
@@ -193,9 +181,9 @@ function HeroSection() {
                 {link.label}
               </a>
             ))}
-            <span className={`text-[var(--muted)] font-medium uppercase tracking-wide sm:tracking-wider text-xs sm:text-sm md:text-lg lg:text-[1.4rem] cursor-default select-none ${sealCls(rev.nav)}`}>
-              Secret Project
-            </span>
+            <a href="#forge" onClick={openForge} inert={!rev.nav} className={linkCls(rev.nav)}>
+              Forge
+            </a>
             <ThemeToggle />
           </nav>
         </FadeIn>
@@ -238,6 +226,7 @@ function HeroSection() {
             <RebelForge
               brand="Rebel Realm"
               storageKey="rr_opened"
+              forcePlay={forced}
               className="rf-host"
               onReveal={handleReveal}
               onRevealAll={openAll}
@@ -550,18 +539,40 @@ function ProjectsSection() {
 ══════════════════════════════════════════════════ */
 function ClosingSection() {
   return (
-    <section className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 border-t border-[var(--border-soft)]">
-      <div className="max-w-6xl mx-auto flex flex-col items-start gap-8">
+    <section id="contact" className="px-6 sm:px-10 md:px-16 lg:px-20 py-24 sm:py-32 md:py-40 border-t border-[var(--border-soft)]">
+      <div className="max-w-6xl mx-auto">
         <FadeIn>
-          <h2
-            className="text-[var(--text)] font-black uppercase leading-[0.95]"
-            style={{ fontSize: 'clamp(2.25rem, 7vw, 6.5rem)' }}
-          >
-            Say hello.
-          </h2>
+          <p className="eyebrow">Say hello</p>
         </FadeIn>
-        <FadeIn delay={0.1}>
-          <ContactButton />
+        <FadeIn delay={0.08}>
+          <a
+            href="mailto:hello@rebel-realm.com"
+            className="group mt-8 sm:mt-10 flex items-end justify-between gap-6 border-b-2 border-[var(--border-strong)] pb-5 md:pb-7 text-[var(--text)]"
+          >
+            <span
+              className="font-black leading-none break-all tracking-tight transition-opacity duration-200 group-hover:opacity-70"
+              style={{ fontSize: 'clamp(1.5rem, 6.2vw, 5.75rem)' }}
+            >
+              hello@rebel-realm.com
+            </span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="shrink-0 w-[clamp(1.75rem,5vw,4.5rem)] h-[clamp(1.75rem,5vw,4.5rem)] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M7 17L17 7M8 7h9v9" />
+            </svg>
+          </a>
+        </FadeIn>
+        <FadeIn delay={0.16}>
+          <p className="text-[var(--muted)] font-light mt-6 text-lg md:text-xl">
+            Players, press, partners. Write to us.
+          </p>
         </FadeIn>
       </div>
     </section>
@@ -575,10 +586,10 @@ function SiteFooter() {
         © {new Date().getFullYear()} Rebel Realm
       </span>
       <a
-        href="mailto:hello@rebel-realm.com"
-        className="inline-flex items-center min-h-[44px] text-[var(--text)] hover:opacity-70 text-sm tracking-wide transition-opacity duration-200"
+        href="#main-content"
+        className="inline-flex items-center min-h-[44px] text-[var(--text)] hover:opacity-70 text-sm tracking-wide uppercase transition-opacity duration-200"
       >
-        hello@rebel-realm.com
+        Back to top
       </a>
     </footer>
   )

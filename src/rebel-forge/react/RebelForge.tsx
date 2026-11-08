@@ -15,6 +15,8 @@ export interface RebelForgeProps {
   theme?: 'light' | 'dark';
   /** localStorage key that remembers a visit. Default "rf_opened". */
   storageKey?: string;
+  /** Start the game even for a returning visitor, e.g. when they ask to open the Forge again. */
+  forcePlay?: boolean;
   /** How long to wait for the game to load before giving up. Default 4000. */
   failsafeMs?: number;
   /** Fires as the visitor progresses: Kind step done, Effects step done, card forged. Map these to your Sealable items. */
@@ -56,7 +58,7 @@ export default function RebelForge(props: RebelForgeProps) {
       onEvent: (n, p) => latest.current.onEvent?.(n, p),
     });
     ctrl.current = c;
-    c.begin();
+    c.begin({ forcePlay: latest.current.forcePlay });
     return () => { c.destroy(); ctrl.current = null; }; // StrictMode runs this once in dev, so a remount is safe
   }, []);
 
