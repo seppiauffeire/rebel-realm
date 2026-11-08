@@ -470,7 +470,7 @@ function Redacted({ ch }: { ch: number }) {
   return (
     <span
       aria-hidden="true"
-      className="inline-block align-baseline bg-[var(--text)] rounded-[0.12em]"
+      className="inline-block align-baseline bg-[var(--text)]"
       style={{ width: `${ch}ch`, height: '0.78em', marginRight: '0.28em' }}
     />
   )
@@ -479,8 +479,8 @@ function Redacted({ ch }: { ch: number }) {
 function CardBack() {
   return (
     <svg viewBox="0 0 300 420" className="block w-full h-auto" role="img" aria-label="A face-down card" style={{ transform: 'rotate(-4deg)' }}>
-      <rect x="4" y="4" width="292" height="412" rx="26" fill="var(--placeholder-bg)" stroke="var(--border-strong)" strokeWidth="4" />
-      <rect x="26" y="26" width="248" height="368" rx="14" fill="none" stroke="var(--border-strong)" strokeWidth="2" opacity="0.5" />
+      <rect x="4" y="4" width="292" height="412" rx="0" fill="var(--placeholder-bg)" stroke="var(--border-strong)" strokeWidth="4" />
+      <rect x="26" y="26" width="248" height="368" rx="0" fill="none" stroke="var(--border-strong)" strokeWidth="2" opacity="0.5" />
       <g fill="none" stroke="var(--text)" strokeWidth="3" strokeLinejoin="round">
         <path d="M150 96 L214 210 L150 324 L86 210 Z" />
         <path d="M150 132 L190 210 L150 288 L110 210 Z" opacity="0.55" />
@@ -498,7 +498,7 @@ function ProjectsSection() {
           <p className="eyebrow">In the works</p>
         </FadeIn>
         <FadeIn delay={0.08} y={50}>
-          <article className="mt-10 sm:mt-14 rounded-[36px] sm:rounded-[48px] md:rounded-[60px] border-2 border-[var(--border-strong)] p-6 sm:p-10 md:p-14 grid gap-10 md:gap-16 md:grid-cols-[minmax(0,300px)_1fr] items-center">
+          <article className="mt-10 sm:mt-14 border-2 border-[var(--border-strong)] p-6 sm:p-10 md:p-14 grid gap-10 md:gap-16 md:grid-cols-[minmax(0,300px)_1fr] items-center">
             <div className="w-[min(60vw,260px)] md:w-full mx-auto md:mx-0">
               <CardBack />
             </div>
@@ -517,7 +517,7 @@ function ProjectsSection() {
                 className="text-[var(--text)] mt-6 max-w-xl"
                 style={{ fontSize: 'clamp(1.15rem, 2vw, 1.6rem)', lineHeight: 1.4 }}
               >
-                A new card game with secret rules we are not ready to share, so think of the Forge as the warm-up
+                A new card game with secret rules we are not ready to share, so think of the Forge as the warm‑up
               </p>
               <p className="text-[var(--muted)] mt-4 text-base md:text-lg uppercase tracking-widest">Card game · In development</p>
               <a
